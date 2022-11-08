@@ -1,10 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App'
+import Whiteboard from './Whiteboard'
 import './index.css'
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById('kfc-crazy-thursday-vme50') as HTMLElement).render(
   <React.StrictMode>
-    <App />
+    <Whiteboard />
   </React.StrictMode>
 )

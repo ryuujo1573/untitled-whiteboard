@@ -11,6 +11,7 @@ specifiers:
   react-dom: ^18.2.0
   react-redux: ^8.0.4
   redux: ^4.2.0
+  roughjs: ^4.5.2
   typescript: ^4.6.4
   vite: ^3.2.0
 
@@ -21,6 +22,7 @@ dependencies:
   react-dom: 18.2.0_react@18.2.0
   react-redux: 8.0.4_h6epe7l2gr2z2rhkgdu6cxyvqq
   redux: 4.2.0
+  roughjs: 4.5.2
 
 devDependencies:
   '@redux-devtools/core': 3.13.1_o2tqyputigyuaeenf6adbynmda
@@ -991,6 +993,10 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
+  /path-data-parser/0.1.0:
+    resolution: {integrity: sha512-NOnmBpt5Y2RWbuv0LMzsayp3lVylAHLPUTut412ZA3l+C4uw4ZVkQbjShYCQ8TCpUMdPapr4YjUqLYD6v68j+w==}
+    dev: false
+
   /path-parse/1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
     dev: true
@@ -998,6 +1004,17 @@ packages:
   /picocolors/1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
     dev: true
+
+  /points-on-curve/0.2.0:
+    resolution: {integrity: sha512-0mYKnYYe9ZcqMCWhUjItv/oHjvgEsfKvnUTg8sAtnHr3GVy7rGkXCb6d5cSyqrWqL4k81b9CPg3urd+T7aop3A==}
+    dev: false
+
+  /points-on-path/0.2.1:
+    resolution: {integrity: sha512-25ClnWWuw7JbWZcgqY/gJ4FQWadKxGWk+3kR/7kD0tCaDtPPMj7oHu2ToLaVhfpnHrZzYby2w6tUA0eOIuUg8g==}
+    dependencies:
+      path-data-parser: 0.1.0
+      points-on-curve: 0.2.0
+    dev: false
 
   /postcss/8.4.18:
     resolution: {integrity: sha512-Wi8mWhncLJm11GATDaQKobXSNEYGUHeQLiQqDFG1qQ5UTDPTEvKw0Xt5NsTpktGTwLps3ByrWsBrG0rB8YQ9oA==}
@@ -1643,6 +1660,14 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
+
+  /roughjs/4.5.2:
+    resolution: {integrity: sha512-2xSlLDKdsWyFxrveYWk9YQ/Y9UfK38EAMRNkYkMqYBJvPX8abCa9PN0x3w02H8Oa6/0bcZICJU+U95VumPqseg==}
+    dependencies:
+      path-data-parser: 0.1.0
+      points-on-curve: 0.2.0
+      points-on-path: 0.2.1
+    dev: false
 
   /scheduler/0.23.0:
     resolution: {integrity: sha512-CtuThmgHNg7zIZWAXi3AsyIzA3n4xx7aNyjwC2VJldO2LMVDhFK+63xGqq6CsJH4rTAt6/M+N4GhZiDYPx9eUw==}
