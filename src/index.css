@@ -15,6 +15,22 @@
   -webkit-text-size-adjust: 100%;
 }
 
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  /* TODO 仍有差距，需进一步调整 */
+  overflow: hidden;
+}
+
+#kfc-crazy-thursday-vme50,
+.App {
+  height: 100%;
+  width: 100%;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -26,9 +42,9 @@ a:hover.dark {
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
+  /* margin: 0; */
+  /* display: flex; */
+  /* place-items: center; */
   min-width: 320px;
   min-height: 100vh;
 }
