@@ -11,13 +11,39 @@ const Elements = [
 
 export type AllTools = typeof Elements[number] | 'selector';
 
+type NullableKeys<T> = {
+  [P in keyof T]-?: Extract<T[P], null | undefined> extends never ? never : P
+}[keyof T]
+type ExtractNullable<T> = {
+  [P in NullableKeys<T>]: NonNullable<T[P]>
+}
+type ElementStyle = {
+  strokeColor?: string
+  backgroundColor?: string
+  fillStyle?: FillStyle
+  strokeWidth?: number
+  strokeStyle?: StrokeStyle
+  strokeEndian?: StrokeEndian
+  opacity?: number
+}
+export const DefaultElementStyle: ExtractNullable<ElementStyle> = {
+  strokeColor: "auto",
+  backgroundColor: "auto",
+  fillStyle: "solid",
+  strokeWidth: 1,
+  strokeStyle: "solid",
+  strokeEndian: "round",
+  opacity: 1,
+
+}
+
 interface _ElementBase {
   readonly id: string
   x: number
   y: number
-  removed: boolean // = false
   // TODO: group, element bonds, 
   lastUpdate: number
+  removed?: boolean
   strokeColor?: string
   backgroundColor?: string
   fillStyle?: FillStyle
@@ -25,7 +51,7 @@ interface _ElementBase {
   strokeStyle?: StrokeStyle
   strokeEndian?: StrokeEndian
   // roughness?: number
-  opacity: number // = 1
+  opacity?: number
   width?: number
   height?: number
   angle?: number
@@ -41,6 +67,7 @@ interface _ElementBase {
 interface IFreedrawElement {
   readonly points: readonly Point[]
   readonly pressures?: readonly number[]
+  last: Point | null
 }
 
 type ConcreteElement<P, T extends typeof Elements[number] = never> = _ElementBase & {
