@@ -3,10 +3,12 @@ lockfileVersion: 5.4
 specifiers:
   '@redux-devtools/core': ^3.13.1
   '@reduxjs/toolkit': ^1.8.6
+  '@types/node': ^18.11.9
   '@types/react': ^18.0.22
   '@types/react-dom': ^18.0.7
   '@vitejs/plugin-react': ^2.2.0
   antd: ^4.24.0
+  perfect-freehand: ^1.2.0
   react: ^18.2.0
   react-dom: ^18.2.0
   react-redux: ^8.0.4
@@ -18,6 +20,7 @@ specifiers:
 dependencies:
   '@reduxjs/toolkit': 1.8.6_kuo2ie247izvzll3jejufdtq3q
   antd: 4.24.0_biqbaboplfbrettd7655fr4n2y
+  perfect-freehand: 1.2.0
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
   react-redux: 8.0.4_h6epe7l2gr2z2rhkgdu6cxyvqq
@@ -26,6 +29,7 @@ dependencies:
 
 devDependencies:
   '@redux-devtools/core': 3.13.1_o2tqyputigyuaeenf6adbynmda
+  '@types/node': 18.11.9
   '@types/react': 18.0.24
   '@types/react-dom': 18.0.8
   '@vitejs/plugin-react': 2.2.0_vite@3.2.2
@@ -472,6 +476,10 @@ packages:
     dependencies:
       '@types/react': 18.0.24
       hoist-non-react-statics: 3.3.2
+
+  /@types/node/18.11.9:
+    resolution: {integrity: sha512-CRpX21/kGdzjOpFsZSkcrXMGIBWMGNIHXXBVFSH+ggkftxg+XYP20TESbh+zFvFj3EQOl5byk0HTRn1IL6hbqg==}
+    dev: true
 
   /@types/prop-types/15.7.5:
     resolution: {integrity: sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==}
@@ -1000,6 +1008,10 @@ packages:
   /path-parse/1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
     dev: true
+
+  /perfect-freehand/1.2.0:
+    resolution: {integrity: sha512-h/0ikF1M3phW7CwpZ5MMvKnfpHficWoOEyr//KVNTxV4F6deRK1eYMtHyBKEAKFK0aXIEUK9oBvlF6PNXMDsAw==}
+    dev: false
 
   /picocolors/1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
