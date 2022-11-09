@@ -27,8 +27,8 @@ type ElementStyle = {
   opacity?: number
 }
 export const DefaultElementStyle: ExtractNullable<ElementStyle> = {
-  strokeColor: "auto",
-  backgroundColor: "auto",
+  strokeColor: "black",
+  backgroundColor: "black",
   fillStyle: "solid",
   strokeWidth: 1,
   strokeStyle: "solid",
@@ -42,7 +42,7 @@ interface _ElementBase {
   x: number
   y: number
   // TODO: group, element bonds, 
-  lastUpdate: number
+  lastUpdate?: number
   removed?: boolean
   strokeColor?: string
   backgroundColor?: string
@@ -65,8 +65,8 @@ interface _ElementBase {
 }
 
 interface IFreedrawElement {
-  readonly points: readonly Point[]
-  readonly pressures?: readonly number[]
+  points: readonly Point[]
+  pressures?: readonly number[]
   last: Point | null
 }
 
