@@ -11,11 +11,11 @@ const Elements = [
 
 export type AllTools = typeof Elements[number] | 'selector';
 
-class _ElementBase {
+interface _ElementBase {
   readonly id: string
   x: number
   y: number
-  removed: boolean = false
+  removed: boolean // = false
   // TODO: group, element bonds, 
   lastUpdate: number
   strokeColor?: string
@@ -25,7 +25,7 @@ class _ElementBase {
   strokeStyle?: StrokeStyle
   strokeEndian?: StrokeEndian
   // roughness?: number
-  opacity: number = 1
+  opacity: number // = 1
   width?: number
   height?: number
   angle?: number
@@ -36,18 +36,11 @@ class _ElementBase {
   locked?: boolean
   /// Additional records
   data?: Record<string, any>
-
-  constructor({ x, y, id }: _ElementBaseProps) {
-    this.id = id ?? 'random-id'
-    this.x = x
-    this.y = y
-    this.lastUpdate = Date.now()
-  }
 }
 
 interface IFreedrawElement {
   readonly points: readonly Point[]
-  readonly pressures: readonly number[]
+  readonly pressures?: readonly number[]
 }
 
 type ConcreteElement<P, T extends typeof Elements[number] = never> = _ElementBase & {
