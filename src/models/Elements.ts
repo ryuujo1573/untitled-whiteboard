@@ -75,7 +75,7 @@ type ConcreteElement<P, T extends typeof Elements[number] = never> = _ElementBas
 } & P;
 
 // All element types here:
-export type CommonElement = ConcreteElement<{}>
+export type CommonElement = ConcreteElement<{[key: string]: any}>
 export type FreedrawElement = ConcreteElement<IFreedrawElement, 'freedraw'>;
 
 
