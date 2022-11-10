@@ -1,35 +1,37 @@
 import { AllTools } from "../models/Elements"
+import { Cursor, ArrowRight, Square, Fonts, Images } from 'react-bootstrap-icons'
+import { createElement, ReactElement, ReactNode } from "react";
 
 interface ToolType {
     type: AllTools,
-    icon: null,
+    icon: ReactNode,
     shortCut: 't' | 'x' | 'r' | 'v' | null,
 }
 
 export const TOOLS: ToolType[] = [
     {
         type: 'selector',
-        icon: null,
+        icon: <Cursor />,
         shortCut: 'v',
     },
     {
         type: 'shape',
-        icon: null,
+        icon: <Square />,
         shortCut: 'r',
     },
     {
         type: 'freedraw',
-        icon: null,
+        icon: <ArrowRight />,
         shortCut: 'x',
     },
     {
         type: 'text',
-        icon: null,
+        icon: <Fonts />,
         shortCut: 't',
     },
     {
         type: 'image',
-        icon: null,
+        icon: <Images />,
         shortCut: null
     }
 ]
