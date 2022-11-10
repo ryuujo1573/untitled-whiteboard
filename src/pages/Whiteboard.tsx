@@ -239,8 +239,11 @@ function Whiteboard() {
         position: 'absolute',
         margin: '2ch',
       }}>({(pos[0] + ',').padEnd(12) + (pos[1]).padEnd(9)})</span>
-      <OperationUI 
+      <OperationUI
         // TODO where is my tool tool?
+        tool='freedraw'
+        setTool={() => { }}
+        canvas={canvasRef.current}
       />
       <canvas
         width={window.innerWidth}
