@@ -9,6 +9,7 @@ import { createPointerState, PointerState } from '../models/PointerState';
 import { waitForRequestAnimationFrame } from '../canvasHelper';
 import { unstable_batchedUpdates } from 'react-dom';
 import testElements from '../testElements';
+import { utils } from '../utils';
 
 const elementCanvasCaches = new WeakMap<CommonElement, HTMLCanvasElement>();
 const pathCaches = new WeakMap<FreedrawElement, Path2D>();
@@ -42,11 +43,11 @@ function Whiteboard() {
   //  for adding touch events listener to canvas.
   useEffect(() => {
     const onTapStart = (evt: TouchEvent) => {
-      console.log('onTapStart: ' + Date.now() / 1000);
+      utils.log('onTapStart: ' + Date.now() / 1000);
     }
 
     const onTapEnd = (evt: TouchEvent) => {
-      console.log('onTapEnd: ' + Date.now() / 1000);
+      utils.log('onTapEnd: ' + Date.now() / 1000);
     }
 
     canvasRef.current?.addEventListener(Events.touchStart, onTapStart);
@@ -87,6 +88,9 @@ function Whiteboard() {
   const createPointerStrokingHandler =
     (pointerState: PointerState) =>
       withBatchedUpdates((event: PointerEvent) => {
+        if (!utils.shouldSkipLogging) {
+          utils.shouldSkipLogging = true;
+        }
         const { clientX, clientY } = event;
         const target = event.target;
         const { wipElement } = boardState;
@@ -106,10 +110,11 @@ function Whiteboard() {
         const shouldIgnore = lastPoint && lastPoint[0] === dx && lastPoint[1] === dy;
         if (shouldIgnore) return;
 
-        const pressures = freedraw.pressures ? [...freedraw.pressures, event.pressure] as const : undefined;
+        const pressures = !!freedraw.pressures ? [...freedraw.pressures, event.pressure] as const : undefined;
 
         freedraw.pressures = pressures;
         freedraw.points = [...points, [dx, dy]];
+        
         elementCanvasCaches.set(freedraw, generateCanvas(freedraw));
         setBoardState({
           ...boardState,
@@ -121,6 +126,9 @@ function Whiteboard() {
     (state: PointerState) =>
       withBatchedUpdates((event: PointerEvent) => {
         // setWipElement(null)
+        if (utils.shouldSkipLogging) {
+          utils.shouldSkipLogging = false;
+        }
         lastPointerUp = null;
 
         let it = state.listeners.onPointerMove;
@@ -130,8 +138,8 @@ function Whiteboard() {
         removeEventListener(Events.pointerUp, state.listeners.onPointerUp!);
 
         const { wipElement } = boardState;
-        // assuming element is freedraw (just for now)
         if (!wipElement) return;
+        // assuming element is freedraw (just for now)
         const freedraw = wipElement as FreedrawElement;
 
         const { clientX, clientY } = event;
@@ -140,9 +148,11 @@ function Whiteboard() {
         let dy = clientY - freedraw.y;
 
         // prevent infinitely small dots. (maybe by single click ?)
-        console.log(dx, dy, ...points[0]);
+        utils.log(dx, dy, ...points[0]);
 
+        // stroke as dots
         if (dx === points[0][0] && dy === points[0][1]) {
+          console.warn('stroke extremely small, changing its size to a visible level.');
           dx += 0.001;
           dy += 0.001;
         }
@@ -157,7 +167,7 @@ function Whiteboard() {
           ...boardState,
           wipElement: null
         });
-        console.log(boardState);
+        utils.log(boardState);
       })
 
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -174,28 +184,29 @@ function Whiteboard() {
         // handle freedraw element creation.
 
         // TODO: replace defaults with current state.
-        console.log(`🆕 created freedraw element at (${event.clientX}, ${event.clientY})`);
+        const id = randomId();
+        utils.log(`🆕 created freedraw element ${id} at (${event.clientX}, ${event.clientY})`);
 
         const element: FreedrawElement = {
-          id: randomId(),
+          id,
           type: 'freedraw',
           x: event.clientX,
           y: event.clientY,
-          strokeColor: DefaultElementStyle.strokeColor,
-          backgroundColor: DefaultElementStyle.backgroundColor,
-          fillStyle: DefaultElementStyle.fillStyle,
-          strokeWidth: DefaultElementStyle.strokeWidth,
-          strokeStyle: DefaultElementStyle.strokeStyle,
-          opacity: DefaultElementStyle.opacity,
-          points: [],
-          pressures: undefined,
+          // strokeColor: DefaultElementStyle.strokeColor,
+          // backgroundColor: DefaultElementStyle.backgroundColor,
+          // fillStyle: DefaultElementStyle.fillStyle,
+          // strokeWidth: DefaultElementStyle.strokeWidth,
+          // strokeStyle: DefaultElementStyle.strokeStyle,
+          // opacity: DefaultElementStyle.opacity,
+          points: [[0, 0]],
+          // pressures: undefined,
           last: null,
         };
 
+        boardState.wipElement = element;
+        boardState.elements = [...boardState.elements, element]
         setBoardState({
           ...boardState,
-          wipElement: element,
-          elements: [...boardState.elements, element]
         });
 
         break;
@@ -213,8 +224,6 @@ function Whiteboard() {
     // save the function refs so as to remove them finally.
     pointerState.listeners.onPointerMove = $onPointerMove;
     pointerState.listeners.onPointerUp = $onPointerUp;
-
-
   }
 
   const [pos, setPos] = useState(['0', '0']);
@@ -287,14 +296,14 @@ function generateCanvas(freedraw: FreedrawElement) {
   ctx.fillStyle = `rgba(${[rand(0, 255), rand(0, 255), rand(0, 255)].join(',')}, 0.2)`;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  console.log(`🏞️ image: ${freedraw.id}, pmin(${[x1, y1]}) pmax(${[x2, y2]}), ${[canvas.width, canvas.height]}`);
+  utils.log(`🏞️ image: ${freedraw.id}, pmin(${[x1, y1]}) pmax(${[x2, y2]}), ${[canvas.width, canvas.height]}`);
 
-  const dx = x > x1 ? d(x, x1) * 1.0 + 0.0 : 0;
-  const dy = y > y1 ? d(y, y1) * 1.0 + 0.0 : 0;
+  const dOriginX = x > x1 ? d(x, x1) * 1.0 + 0.0 : 0;
+  const dOriginY = y > y1 ? d(y, y1) * 1.0 + 0.0 : 0;
   ctx.translate(
-    dx + padding,
-    dy + padding);
-  console.log(`🏞️ image: ${freedraw.id}, translate (${dx}, ${dy}).`);
+    dOriginX + padding,
+    dOriginY + padding);
+  utils.log(`🏞️ image: ${freedraw.id}, translate (${dOriginX}, ${dOriginY}).`);
 
   ctx.save(); // why?
   // ctx.scale(devicePixelRatio * 1.0, devicePixelRatio * 1.0)
@@ -359,7 +368,7 @@ function generateCanvas(freedraw: FreedrawElement) {
 
   //#endregion
 
-  console.log('🏞️ image: fill path.', canvas);
+  utils.log('🏞️ image: fill path.', canvas);
 
   return canvas;
 }
@@ -392,17 +401,12 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
       // const x = ((x2 - x1) / 2) * devicePixelRatio
       // const y = ((y2 - y1) / 2) * devicePixelRatio
 
-      console.log(`🪄 canvas: drawImage from (${x}, ${y}), with size of (${elementCanvas.width}, ${elementCanvas.height}).`);
+      utils.log(`🪄 canvas: drawImage from (${x}, ${y}), with size of (${elementCanvas.width}, ${elementCanvas.height}).`);
 
       const fontSize = 16;
       context.font = `${fontSize}px system-ui`;
       context.lineWidth = 1;
       context.fillText(freedraw.id, x, y + fontSize);
-      context.drawImage(
-        elementCanvas,
-        x, y
-        // canvas.width, canvas.height
-      );
       const ctx = elementCanvas.getContext('2d');
       // debug
       if (ctx) {
@@ -421,9 +425,14 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
         ctx.fillStyle = 'rgba(255, 102, 102, .5)';
         ctx.fill();
       }
+      context.drawImage(
+        elementCanvas,
+        x, y
+        // canvas.width, canvas.height
+      );
       context.restore();
 
-      console.log('🪄 canvas: renderElement', elementCanvas);
+      utils.log('🪄 canvas: renderElement', elementCanvas);
 
       break;
     default:
@@ -480,7 +489,8 @@ function renderBoard(canvas: HTMLCanvasElement, { elements }: BoardState, render
     context.stroke();
     context.restore();
 
-    // FIXME: remove this.
+    //#region Stroke both axes.
+
     context.lineWidth = 10;
     context.beginPath();
     context.moveTo(0, 0);
@@ -493,12 +503,14 @@ function renderBoard(canvas: HTMLCanvasElement, { elements }: BoardState, render
     context.lineTo(0, height);
     context.strokeStyle = 'blue';
     context.stroke();
+    //#endregion
+
   }
 
   elements.forEach(element => {
     // render element
     try {
-      console.log(`🪝 hook: rendering ${element.id}`);
+      utils.log(`🪝 hook: rendering ${element.id}`);
 
       renderElement(element, context);
     } catch (error: any) {
