@@ -10,6 +10,7 @@ import { waitForRequestAnimationFrame } from '../canvasHelper';
 import { unstable_batchedUpdates } from 'react-dom';
 import testElements from '../testElements';
 import { utils } from '../utils';
+import OperationUI from '../components/OperationUI';
 
 const elementCanvasCaches = new WeakMap<CommonElement, HTMLCanvasElement>();
 const pathCaches = new WeakMap<FreedrawElement, Path2D>();
@@ -114,7 +115,7 @@ function Whiteboard() {
 
         freedraw.pressures = pressures;
         freedraw.points = [...points, [dx, dy]];
-        
+
         elementCanvasCaches.set(freedraw, generateCanvas(freedraw));
         setBoardState({
           ...boardState,
@@ -238,6 +239,9 @@ function Whiteboard() {
         position: 'absolute',
         margin: '2ch',
       }}>({(pos[0] + ',').padEnd(12) + (pos[1]).padEnd(9)})</span>
+      <OperationUI 
+        // TODO where is my tool tool?
+      />
       <canvas
         width={window.innerWidth}
         height={window.innerHeight}
