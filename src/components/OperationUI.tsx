@@ -5,8 +5,8 @@ import ToolBar from "./ToolBar";
 
 interface OperationUIProps {
     tool: AllTools,
-    setTool: React.Dispatch<React.SetStateAction<AllTools>>,
-    canvas: HTMLCanvasElement | null
+    setTool: (type: AllTools) => void,
+    canvas: HTMLCanvasElement | null,
 }
 
 /**

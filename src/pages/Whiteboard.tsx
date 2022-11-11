@@ -8,6 +8,7 @@ import { randomId } from '../random';
 import { createPointerState, PointerState } from '../models/PointerState';
 import testElements from '../testElements';
 import { utils, withBatchedUpdates, withBatchedUpdatesThrottled } from '../utils';
+import OperationUI from '../components/OperationUI';
 
 type TranslatedCanvas = [canvas: HTMLCanvasElement, dx: number, dy: number]
 const elementCanvasCaches = new WeakMap<CommonElement, TranslatedCanvas>();
@@ -238,9 +239,6 @@ function Whiteboard() {
     setPos([clientX.toFixed(4), clientY.toFixed(4)]);
   };
 
-  // state of tool in toolbar
-  const [tool, setTool] = useState<AllTools>('selector')
-
   //#endregion
   // TODO: 宽高和 100% 有差距，需调整
   return (
@@ -251,8 +249,11 @@ function Whiteboard() {
       }}>({(pos[0] + ',').padEnd(12) + (pos[1]).padEnd(9)})</span>
       <OperationUI
         // TODO where is my tool tool?
-        tool={tool}
-        setTool={setTool}
+        tool={boardState.tool}
+        setTool={(type) => setBoardState({
+          ...boardState,
+          tool: type,
+        })}
         canvas={canvasRef.current}
       />
       <canvas
@@ -386,7 +387,7 @@ function generateCanvas(freedraw: FreedrawElement): TranslatedCanvas {
   //#endregion
 
   utils.log('🏞️ image: fill path.', canvas);
-  
+
   return [canvas, freedraw.x - x1, freedraw.y - y1];
 }
 
@@ -424,7 +425,7 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
       context.font = `${fontSize}px system-ui`;
       context.lineWidth = 1;
       context.fillText(freedraw.id, x, y + fontSize);
-      
+
       if (debug) {
         const ctx = elementCanvas.getContext('2d')!;
         // ctx.setTransform(1,0,0,1,0,0)
