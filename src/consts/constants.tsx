@@ -1,5 +1,5 @@
 import { AllTools } from "../models/Elements"
-import { Cursor, ArrowRight, Square, Fonts, Images } from 'react-bootstrap-icons'
+import { Cursor, ArrowRight, Square, Fonts, Images, Pen } from 'react-bootstrap-icons'
 import { createElement, ReactElement, ReactNode } from "react";
 
 interface ToolType {
@@ -21,7 +21,7 @@ export const TOOLS: ToolType[] = [
     },
     {
         type: 'freedraw',
-        icon: <ArrowRight />,
+        icon: <Pen />,
         shortCut: 'x',
     },
     {

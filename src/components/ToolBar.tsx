@@ -1,6 +1,7 @@
 import { TOOLS } from "../consts/constants"
 import { AllTools } from "../models/Elements"
-import { capitalizeString, setCursorForTool } from "../utils"
+import { capitalizeString, setCursorForTool, utils } from "../utils"
+import { clsx } from 'clsx'
 
 interface ToolBarProps {
   id: string,
@@ -12,7 +13,7 @@ interface ToolBarProps {
 
 /**
  * 工具栏组件
- * @param param0 
+ * @param param0 {tool, setTool, canvas} tool: 当前工具栏工具 setTool: 设定当前工具的状态管理函数 canvas: 当前 canvas 实例
  * @returns 工具栏
  */
 const ToolBar: React.FC<ToolBarProps> = ({
@@ -36,7 +37,8 @@ const ToolBar: React.FC<ToolBarProps> = ({
       {TOOLS.map(({ type, icon, shortCut }) => {
         return (
           <label
-            className="tool"
+            key={type}
+            className={clsx("tool", type === tool && 'checked')}
             title={getToolTitleFromType(type)}
           >
             <input
@@ -46,7 +48,7 @@ const ToolBar: React.FC<ToolBarProps> = ({
               onChange={(event) => {
                 if (tool !== type) {
                   setTool(type);
-                  setCursorForTool(canvas, tool)
+                  setCursorForTool(canvas, type)
                 }
                 // TODO 打开选择图片操作
                 if (type === 'image') return;

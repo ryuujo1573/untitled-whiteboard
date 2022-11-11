@@ -3,6 +3,8 @@ import { AllTools } from "../models/Elements";
 import Menu from "./Menu";
 import ToolBar from "./ToolBar";
 
+import './OperationUI.scss'
+
 interface OperationUIProps {
     tool: AllTools,
     setTool: (type: AllTools) => void,

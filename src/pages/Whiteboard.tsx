@@ -47,11 +47,11 @@ function Whiteboard() {
   //  for adding touch events listener to canvas.
   useEffect(() => {
     const onTapStart = (evt: TouchEvent) => {
-      utils.log('onTapStart: ' + Date.now() / 1000);
+      // utils.log('onTapStart: ' + Date.now() / 1000);
     }
 
     const onTapEnd = (evt: TouchEvent) => {
-      utils.log('onTapEnd: ' + Date.now() / 1000);
+      // utils.log('onTapEnd: ' + Date.now() / 1000);
     }
 
     canvasRef.current?.addEventListener(Events.touchStart, onTapStart);
@@ -156,7 +156,7 @@ function Whiteboard() {
         let dy = clientY - freedraw.y;
 
         // prevent infinitely small dots. (maybe by single click ?)
-        utils.log(dx, dy, ...points[0]);
+        // utils.log(dx, dy, ...points[0]);
 
         // stroke as dots
         if (dx === points[0][0] && dy === points[0][1]) {
@@ -175,7 +175,7 @@ function Whiteboard() {
           ...boardState,
           wipElement: null
         });
-        utils.log(boardState);
+        // utils.log(boardState);
       })
 
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -193,7 +193,7 @@ function Whiteboard() {
 
         // TODO: replace defaults with current state.
         const id = randomId();
-        utils.log(`🆕 created freedraw element ${id} at (${event.clientX}, ${event.clientY})`);
+        // utils.log(`🆕 created freedraw element ${id} at (${event.clientX}, ${event.clientY})`);
 
         const element: FreedrawElement = {
           id,
@@ -248,7 +248,6 @@ function Whiteboard() {
         margin: '2ch',
       }}>({(pos[0] + ',').padEnd(12) + (pos[1]).padEnd(9)})</span>
       <OperationUI
-        // TODO where is my tool tool?
         tool={boardState.tool}
         setTool={(type) => setBoardState({
           ...boardState,
@@ -314,14 +313,14 @@ function generateCanvas(freedraw: FreedrawElement): TranslatedCanvas {
   ctx.fillStyle = `rgba(${[rand(0, 255), rand(0, 255), rand(0, 255)].join(',')}, 0.2)`;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  utils.log(`🏞️ image: ${freedraw.id}, pmin(${[x1, y1]}) pmax(${[x2, y2]}), ${[canvas.width, canvas.height]}`);
+  // utils.log(`🏞️ image: ${freedraw.id}, pmin(${[x1, y1]}) pmax(${[x2, y2]}), ${[canvas.width, canvas.height]}`);
 
   const dOriginX = x > x1 ? d(x, x1) * 1.0 + 0.0 : 0;
   const dOriginY = y > y1 ? d(y, y1) * 1.0 + 0.0 : 0;
   ctx.translate(
     dOriginX + padding,
     dOriginY + padding);
-  utils.log(`🏞️ image: ${freedraw.id}, translate (${dOriginX}, ${dOriginY}).`);
+  // utils.log(`🏞️ image: ${freedraw.id}, translate (${dOriginX}, ${dOriginY}).`);
 
   ctx.save(); // why?
   // ctx.scale(devicePixelRatio * 1.0, devicePixelRatio * 1.0)
@@ -386,7 +385,7 @@ function generateCanvas(freedraw: FreedrawElement): TranslatedCanvas {
 
   //#endregion
 
-  utils.log('🏞️ image: fill path.', canvas);
+  // utils.log('🏞️ image: fill path.', canvas);
 
   return [canvas, freedraw.x - x1, freedraw.y - y1];
 }
@@ -419,7 +418,7 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
       // const x = ((x2 - x1) / 2) * devicePixelRatio
       // const y = ((y2 - y1) / 2) * devicePixelRatio
 
-      utils.log(`🪄 canvas: drawImage from (${x}, ${y}), with size of (${elementCanvas.width}, ${elementCanvas.height}).`);
+      // utils.log(`🪄 canvas: drawImage from (${x}, ${y}), with size of (${elementCanvas.width}, ${elementCanvas.height}).`);
 
       const fontSize = 16;
       context.font = `${fontSize}px system-ui`;
@@ -450,7 +449,7 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
       );
       context.restore();
 
-      utils.log('🪄 canvas: renderElement', elementCanvas);
+      // utils.log('🪄 canvas: renderElement', elementCanvas);
 
       break;
     default:
@@ -529,7 +528,7 @@ function renderBoard(canvas: HTMLCanvasElement, { elements }: BoardState, render
   elements.forEach(element => {
     // render element
     try {
-      utils.log(`🪝 hook: rendering ${element.id}`);
+      // utils.log(`🪝 hook: rendering ${element.id}`);
 
       renderElement(element, context, debug);
     } catch (error: any) {

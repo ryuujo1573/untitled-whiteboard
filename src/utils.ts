@@ -88,6 +88,7 @@ export const setCursorForTool = (
   canvas: HTMLCanvasElement | null,
   tool: AllTools,
 ) => {
+  utils.log(`🤔 tool: ${tool}`)
   if (tool === 'selector') canvas && (canvas.style.cursor = CURSOR_TYPE.AUTO);
   else canvas && (canvas.style.cursor = CURSOR_TYPE.CROSSHAIR)
 }
@@ -97,4 +98,4 @@ export const setCursorForTool = (
  * @param str 要首字母大写的字符串
  * @returns 首字母大写
  */
-export const capitalizeString = (str: string | null) => str && `${str.charAt(0).toUpperCase}${str.slice(1)}`
+export const capitalizeString = (str: string | null) => str && `${str.charAt(0).toUpperCase()}${str.slice(1)}`
