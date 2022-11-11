@@ -10,6 +10,11 @@ interface ToolBarProps {
   // icon: Pick<ToolType, 'icon'>
 }
 
+/**
+ * 工具栏组件
+ * @param param0 
+ * @returns 工具栏
+ */
 const ToolBar: React.FC<ToolBarProps> = ({
   tool,
   setTool,
