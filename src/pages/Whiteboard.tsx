@@ -376,7 +376,7 @@ function generateCanvas(freedraw: FreedrawElement): TranslatedCanvas {
   //#endregion
 
   utils.log('🏞️ image: fill path.', canvas);
-  
+
   return [canvas, freedraw.x - x1, freedraw.y - y1];
 }
 
@@ -414,7 +414,7 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
       context.font = `${fontSize}px system-ui`;
       context.lineWidth = 1;
       context.fillText(freedraw.id, x, y + fontSize);
-      
+
       if (debug) {
         const ctx = elementCanvas.getContext('2d')!;
         // ctx.setTransform(1,0,0,1,0,0)
