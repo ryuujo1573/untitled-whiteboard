@@ -1,4 +1,4 @@
-import { waitForRequestAnimationFrame } from "../canvasHelper";
+import { throttleByAnimationFrame } from "../utils";
 import { CommonElement, Point } from "./Elements";
 
 
@@ -17,7 +17,7 @@ export type PointerState = {
   metaKeyDown: boolean,
   // used only once, defined inside the initial pointerDown event
   listeners: {
-    onPointerMove?:  ReturnType<typeof waitForRequestAnimationFrame>,
+    onPointerMove?:  ReturnType<typeof throttleByAnimationFrame>,
     onPointerUp?:  ((event: PointerEvent) => void),
     onKeyDown?:  ((event: KeyboardEvent) => void),
     onKeyUp?:  ((event: KeyboardEvent) => void),
