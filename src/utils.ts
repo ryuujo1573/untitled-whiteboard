@@ -98,3 +98,40 @@ export const setCursorForTool = (
  * @returns 首字母大写
  */
 export const capitalizeString = (str: string | null) => str && `${str.charAt(0).toUpperCase}${str.slice(1)}`
+
+export const colorize = (str: string, format: 'rgb' | 'hex' | 'hsl' | 'r,g,b' = 'r,g,b') => {
+  if (str) {
+    const hash = str.split('').reduce((l, r) => l + r.charCodeAt(0) + (l << 5), 0);
+
+    switch (format) {
+      case 'rgb': return `rgb(${(hash & 0xff0000) >> 16},${(hash & 0x00ff00) >> 8},${hash & 0x0000ff})`;
+      case 'hex': return `#${(hash & 0x00ffffff).toString(16).substring(0, 6).padStart(6, '0')}`;
+      case 'hsl': {
+        const r = ((hash & 0xff0000) >> 16) / 255;
+        const g = ((hash & 0x00ff00) >> 8) / 255;
+        const b = (hash & 0x0000ff) / 255;
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h = 0;
+        let s = 0;
+        let l = (max + min) / 2;
+
+        if (max === min) {
+          h = s = 0;
+        } else {
+          const d = max - min;
+          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+          switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+          }
+          h /= 6;
+        }
+        return `hsl(${Math.round(h * 360)},${Math.round(s * 100)}%,${Math.round(l * 100)}%)`;
+      }
+      case 'r,g,b':
+        return [(hash & 0xff0000) >> 16, (hash & 0x00ff00) >> 8, hash & 0x0000ff].join(',');
+    }
+  };
+}

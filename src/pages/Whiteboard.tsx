@@ -7,7 +7,7 @@ import { AllTools, CommonElement, DefaultElementStyle, FreedrawElement, Point } 
 import { randomId } from '../random';
 import { createPointerState, PointerState } from '../models/PointerState';
 import testElements from '../testElements';
-import { utils, withBatchedUpdates, withBatchedUpdatesThrottled } from '../utils';
+import { colorize, utils, withBatchedUpdates, withBatchedUpdatesThrottled } from '../utils';
 
 type TranslatedCanvas = [canvas: HTMLCanvasElement, dx: number, dy: number]
 const elementCanvasCaches = new WeakMap<CommonElement, TranslatedCanvas>();
@@ -289,28 +289,25 @@ function generateCanvas(freedraw: FreedrawElement): TranslatedCanvas {
   const [x1, y1, x2, y2] = getAbsoluteCoords(freedraw);
   //#endregion
 
-
   //#region Initialize canvas.
   const { x, y } = freedraw;
   const d = (a: number, b: number) => Math.abs(a - b);
 
   // in preceding case, `d(x1, x2)` should be `width`.
   const padding = (freedraw.strokeWidth ?? DefaultElementStyle.strokeWidth) * 12;
-  canvas.width = d(x1, x2) * 1.0 + padding * 2;
-  canvas.height = d(y1, y2) * 1.0 + padding * 2;
-
-  const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min)) + min;
-  ctx.fillStyle = `rgba(${[rand(0, 255), rand(0, 255), rand(0, 255)].join(',')}, 0.2)`;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  freedraw.width = canvas.width = d(x1, x2) * 1.0 + padding * 2;
+  freedraw.height = canvas.height = d(y1, y2) * 1.0 + padding * 2;
 
   utils.log(`🏞️ image: ${freedraw.id}, pmin(${[x1, y1]}) pmax(${[x2, y2]}), ${[canvas.width, canvas.height]}`);
 
-  const dOriginX = x > x1 ? d(x, x1) * 1.0 + 0.0 : 0;
-  const dOriginY = y > y1 ? d(y, y1) * 1.0 + 0.0 : 0;
+  // offset from the most upperleft point to element [x,y]
+  const offsetX = x > x1 ? d(x, x1) * 1.0 + padding : 0;
+  const offsetY = y > y1 ? d(y, y1) * 1.0 + padding : 0;
+
   ctx.translate(
-    dOriginX + padding,
-    dOriginY + padding);
-  utils.log(`🏞️ image: ${freedraw.id}, translate (${dOriginX}, ${dOriginY}).`);
+    offsetX,
+    offsetY);
+  utils.log(`🏞️ image: ${freedraw.id}, translate (${offsetX}, ${offsetY}).`);
 
   ctx.save(); // why?
   // ctx.scale(devicePixelRatio * 1.0, devicePixelRatio * 1.0)
@@ -369,7 +366,7 @@ function generateCanvas(freedraw: FreedrawElement): TranslatedCanvas {
   // TODO: implement scale for element
   ctx.save();
 
-  ctx.fillStyle = 'rgb(0, 0, 0, .6)';
+  ctx.fillStyle = 'rgb(0,0,0,.8)';
   ctx.fill(path);
   ctx.restore();
 
@@ -377,7 +374,7 @@ function generateCanvas(freedraw: FreedrawElement): TranslatedCanvas {
 
   utils.log('🏞️ image: fill path.', canvas);
 
-  return [canvas, freedraw.x - x1, freedraw.y - y1];
+  return [canvas, offsetX, offsetY];
 }
 
 function renderElement(element: CommonElement, context: CanvasRenderingContext2D, debug?: boolean) {
@@ -403,19 +400,19 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
 
       context.save();
       // context.translate(cx * 1.0, cy * 1.0)
-
-      const { x, y } = freedraw;
       // const x = ((x2 - x1) / 2) * devicePixelRatio
       // const y = ((y2 - y1) / 2) * devicePixelRatio
-
-      utils.log(`🪄 canvas: drawImage from (${x}, ${y}), with size of (${elementCanvas.width}, ${elementCanvas.height}).`);
-
-      const fontSize = 16;
-      context.font = `${fontSize}px system-ui`;
-      context.lineWidth = 1;
-      context.fillText(freedraw.id, x, y + fontSize);
+      const { x, y } = freedraw;
 
       if (debug) {
+        const fontSize = 16;
+        context.font = `${fontSize}px system-ui`;
+        context.lineWidth = 1;
+        context.fillText(freedraw.id, x1, y1 + fontSize);
+
+        context.fillStyle = 'rgba(' + colorize(freedraw.id) + ',.2)';
+        context.fillRect(x1, y1, freedraw.width!, freedraw.height!);
+
         const ctx = elementCanvas.getContext('2d')!;
         // ctx.setTransform(1,0,0,1,0,0)
         ctx.beginPath();
@@ -426,10 +423,10 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
         ctx.fill();
 
         ctx.beginPath();
-        let [x, y] = freedraw.points.at(-1)!;
-        ctx.rect(x - 5, y - 5, 10, 10);
+        let [_x, _y] = freedraw.points.at(-1)!;
+        ctx.rect(_x - 5, _y - 5, 10, 10);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(255, 102, 102, .5)';
+        ctx.fillStyle = 'rgba(255, 102, 102, .8)';
         ctx.fill();
       }
       context.drawImage(
@@ -496,23 +493,6 @@ function renderBoard(canvas: HTMLCanvasElement, { elements }: BoardState, render
     }
     context.stroke();
     context.restore();
-
-    //#region Stroke both axes.
-
-    context.lineWidth = 10;
-    context.beginPath();
-    context.moveTo(0, 0);
-    context.lineTo(width, 0);
-    context.strokeStyle = 'red';
-    context.stroke();
-
-    context.beginPath();
-    context.moveTo(0, 0);
-    context.lineTo(0, height);
-    context.strokeStyle = 'blue';
-    context.stroke();
-    //#endregion
-
   }
 
   elements.forEach(element => {
