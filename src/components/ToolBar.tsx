@@ -5,7 +5,7 @@ import { capitalizeString, setCursorForTool } from "../utils"
 interface ToolBarProps {
   id: string,
   tool: AllTools,
-  setTool: React.Dispatch<React.SetStateAction<AllTools>>,
+  setTool: (React.SetStateAction<AllTools>) => void,
   canvas: HTMLCanvasElement | null
   // icon: Pick<ToolType, 'icon'>
 }

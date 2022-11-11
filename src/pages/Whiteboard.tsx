@@ -237,6 +237,10 @@ function Whiteboard() {
   const onPointerMove = ({ clientX, clientY, pointerId, pressure, tangentialPressure, tiltX, tiltY, twist, width, height, pointerType, isPrimary }: React.PointerEvent<HTMLCanvasElement>) => {
     setPos([clientX.toFixed(4), clientY.toFixed(4)]);
   };
+
+  // state of tool in toolbar
+  const [tool, setTool] = useState<AllTools>('selector')
+
   //#endregion
   // TODO: 宽高和 100% 有差距，需调整
   return (
@@ -245,6 +249,12 @@ function Whiteboard() {
         position: 'absolute',
         margin: '2ch',
       }}>({(pos[0] + ',').padEnd(12) + (pos[1]).padEnd(9)})</span>
+      <OperationUI
+        // TODO where is my tool tool?
+        tool={tool}
+        setTool={setTool}
+        canvas={canvasRef.current}
+      />
       <canvas
         width={window.innerWidth}
         height={window.innerHeight}
