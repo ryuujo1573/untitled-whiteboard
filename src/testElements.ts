@@ -1,11 +1,11 @@
-import { CommonElement, DefaultElementStyle } from "./models/Elements";
+import { CommonElement } from "./models/types";
 
 const elements: CommonElement[] = [
   {
     id: 'my-love',
     type: 'freedraw',
-    x: 50,
-    y: 50,
+    x: 200,
+    y: 150,
     points: [[
       0,
       0

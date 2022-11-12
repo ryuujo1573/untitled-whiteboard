@@ -1,19 +1,18 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Events } from '../consts/Events';
 import { createPointerState, PointerState } from '../models/PointerState';
 import { colorize, utils, withBatchedUpdates, withBatchedUpdatesThrottled } from '../utils';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { startFreedraw, updateFreedraw, stopFreedraw } from '../redux/features/canvasSlice';
-import store from '../redux/store';
+import { startFreedraw, updateFreedraw, stopFreedraw, startSelection, updateSelection, stopSelection } from '../redux/features/canvasSlice';
 import { BoardState, CommonElement, DefaultElementStyle, FreedrawElement } from '../models/types';
-import { elementCanvasCaches, generateCanvas, getAbsoluteCoords } from '../utils/canvas';
+import { elementCanvasCaches, generateCanvas, getAbsoluteCoords, getRelativeCoords } from '../utils/canvas';
+import { ActionCreators } from 'redux-undo';
 
 function Whiteboard() {
-  // TODO: darkmode auto change and customizable.
   const boardState = useAppSelector(state => state.canvas);
   const dispatch = useAppDispatch();
 
+  // TODO: darkmode auto change and customizable.
   useEffect(() => {
     const mq = matchMedia('(prefers-color-scheme: dark)');
     const inBrowser = typeof window !== 'undefined';
@@ -41,25 +40,22 @@ function Whiteboard() {
   //  for adding touch events listener to canvas.
   useEffect(() => {
     const canvas = canvasRef.current;
-    const onTapStart = (evt: TouchEvent) => {
-      utils.log('onTapStart: ' + Date.now() / 1000);
-    }
+    // const onTapStart = (evt: TouchEvent) => {
+    //   utils.log('onTapStart: ' + Date.now() / 1000);
+    // }
 
-    const onTapEnd = (evt: TouchEvent) => {
-      utils.log('onTapEnd: ' + Date.now() / 1000);
-    }
+    // const onTapEnd = (evt: TouchEvent) => {
+    //   utils.log('onTapEnd: ' + Date.now() / 1000);
+    // }
     if (canvas) {
-      // dispatch(renderBoard(canvas));
-      canvas.addEventListener(Events.touchStart, onTapStart);
-      canvas.addEventListener(Events.touchEnd, onTapEnd);
-      // ¿ where to unsubscribe ?
-      // store.subscribe(() => renderBoard(boardState, canvas));
-      renderBoard(boardState, canvas);
+      // canvas.addEventListener(Events.touchStart, onTapStart);
+      // canvas.addEventListener(Events.touchEnd, onTapEnd);
+      renderBoard(boardState.present, canvas);
     }
 
     return () => {
-      canvas?.removeEventListener(Events.touchStart, onTapStart);
-      canvas?.removeEventListener(Events.touchEnd, onTapEnd);
+      // canvas?.removeEventListener(Events.touchStart, onTapStart);
+      // canvas?.removeEventListener(Events.touchEnd, onTapEnd);
     }
   }, [canvasRef.current, boardState]);
 
@@ -74,20 +70,34 @@ function Whiteboard() {
     });
 
 
-  const createPointerStrokedHandler =
-    (pointerState: PointerState) =>
-      withBatchedUpdates<PointerEvent>((event) => {
-        // lastPointerUp = null;
+  const createPointerStrokedHandler = (pointerState: PointerState) =>
+    withBatchedUpdates<PointerEvent>((event) => {
+      // lastPointerUp = null;
 
-        let it = pointerState.listeners.onPointerMove;
-        it && it.flush();
+      let it = pointerState.listeners.onPointerMove;
+      it && it.flush();
 
-        removeEventListener(Events.pointerMove, pointerState.listeners.onPointerMove!);
-        removeEventListener(Events.pointerUp, pointerState.listeners.onPointerUp!);
+      removeEventListener(Events.pointerMove, pointerState.listeners.onPointerMove!);
+      removeEventListener(Events.pointerUp, pointerState.listeners.onPointerUp!);
 
-        const { clientX, clientY, pressure } = event;
-        dispatch(stopFreedraw({ clientX, clientY, pressure }));
-      });
+      const { clientX, clientY, pressure } = event;
+      dispatch(stopFreedraw({ clientX, clientY, pressure }));
+    });
+
+  const createSelectionHandler = () => withBatchedUpdatesThrottled<PointerEvent>(evt => {
+    const { clientX, clientY, pressure } = evt;
+    dispatch(updateSelection({ clientX, clientY, pressure }));
+  });
+
+  const createAfterSelectionHandler = (pointerState: PointerState) => withBatchedUpdates<PointerEvent>(evt => {
+    let it = pointerState.listeners.onPointerMove;
+    it && it.flush();
+    removeEventListener(Events.pointerMove, pointerState.listeners.onPointerMove!);
+    removeEventListener(Events.pointerUp, pointerState.listeners.onPointerUp!);
+
+    const { clientX, clientY, pressure } = evt;
+    dispatch(stopSelection({ clientX, clientY, pressure }));
+  })
 
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
     // selection in-canvas only
@@ -98,7 +108,7 @@ function Whiteboard() {
 
     const pointerState = createPointerState(event);
 
-    switch (boardState.tool) {
+    switch (boardState.present.tool) {
       case 'freedraw':
         dispatch(startFreedraw(pointerState));
 
@@ -110,6 +120,19 @@ function Whiteboard() {
         addEventListener(Events.pointerMove, onMove);
         addEventListener(Events.pointerUp, onUp);
         break;
+
+      case 'selector': {
+        dispatch(startSelection(pointerState));
+
+        const onMove = createSelectionHandler();
+        const onUp = createAfterSelectionHandler(pointerState);
+
+        pointerState.listeners.onPointerMove = onMove;
+        pointerState.listeners.onPointerUp = onUp;
+        addEventListener(Events.pointerMove, onMove);
+        addEventListener(Events.pointerUp, onUp);
+        break;
+      }
     }
   }
 
@@ -121,10 +144,14 @@ function Whiteboard() {
   // TODO: 宽高和 100% 有差距，需调整
   return (
     <div className="App">
-      <span style={{
+      <div style={{
         position: 'absolute',
         margin: '2ch',
-      }}>({(pos[0] + ',').padEnd(12) + (pos[1]).padEnd(9)})</span>
+        zIndex: -1,
+      }}>
+        <p>({(pos[0] + ',').padEnd(12) + (pos[1]).padEnd(9)})</p>
+        <p>Selecting: ({(boardState.present.selection?.map(v => v.toFixed(1).padStart(5)).join(',')) ?? 'none'})</p>
+      </div>
       <canvas
         width={window.innerWidth}
         height={window.innerHeight}
@@ -135,7 +162,6 @@ function Whiteboard() {
     </div>
   )
 }
-
 
 function renderElement(element: CommonElement, context: CanvasRenderingContext2D, debug?: boolean) {
   switch (element.type) {
@@ -207,8 +233,7 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
 
 
 function renderBoard(state: BoardState, canvas: HTMLCanvasElement) {
-  const { renderConfig, allElements } = state;
-  console.log('bingo');
+  const { renderConfig, allElements, selected, selection } = state;
 
   if (!canvas) return;
 
@@ -231,6 +256,7 @@ function renderBoard(state: BoardState, canvas: HTMLCanvasElement) {
 
   // draw grid lines
 
+  console.time('gridDisplay');
   if (gridDisplay) {
     const width = canvas.width;
     const height = canvas.height;
@@ -239,30 +265,59 @@ function renderBoard(state: BoardState, canvas: HTMLCanvasElement) {
     context.strokeStyle = "rgba(0,0,0,0.1)";
     context.beginPath();
 
-    for (let x = 0; x < width + gridSize; x += gridSize) {
+    for (let x = -gridSize; x < width + gridSize; x += gridSize) {
       context.moveTo(x, -gridSize);
       context.lineTo(x, height + gridSize * 2);
     }
-    for (let y = 0; y < height + gridSize; y += gridSize) {
+    for (let y = -gridSize; y < height + gridSize; y += gridSize) {
       context.moveTo(-gridSize, y);
       context.lineTo(width + gridSize * 2, y);
     }
     context.stroke();
     context.restore();
   }
+  console.timeEnd('gridDisplay');
+
+  // render selection tooltip
+  console.time('selection');
+  if (selection) {
+    // TODO: customizable style.
+    context.save();
+    context.strokeStyle = 'rgb(102, 204, 255)';
+    context.lineWidth = 2;
+    const [x1, y1, x2, y2] = selection;
+    context.strokeRect(x1, y1, x2 - x1, y2 - y1);
+    context.fillStyle = 'rgba(102, 204, 255, .4)';
+    context.fillRect(x1, y1, x2 - x1, y2 - y1);
+    context.restore();
+  }
+  console.timeEnd('selection');
 
   // render elements
-  console.log(allElements);
+
+  console.time('elements');
   allElements.indices.forEach(i => {
     const element = allElements.elementById[i];
     try {
       utils.log(`🪝 hook: rendering %c'${element.id}'`, 'color: blue;');
-
       renderElement(element, context, debug);
+      console.timeLog('elements');
+
+      if (element.selected) {
+        const padding = 10;
+        const [x1, y1, x2, y2] = getAbsoluteCoords(element as FreedrawElement);
+        context.save();
+        context.strokeStyle = 'rgb(102, 204, 255)';
+        context.strokeRect(x1 - padding, y1 - padding, x2 - x1 + padding * 2, y2 - y1 + padding * 2);
+        context.fillStyle = 'rgba(102, 204, 255, .4)';
+        context.fillRect(x1 - padding, y1 - padding, x2 - x1 + padding * 2, y2 - y1 + padding * 2);
+        context.restore();
+      }
     } catch (error: any) {
       console.error(error);
     }
-  })
+  });
+  console.timeEnd('elements');
 }
 
 export default Whiteboard;

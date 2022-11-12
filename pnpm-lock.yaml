@@ -8,12 +8,14 @@ specifiers:
   '@types/react-dom': ^18.0.7
   '@vitejs/plugin-react': ^2.2.0
   antd: ^4.24.0
+  cuid: ^2.1.8
   perfect-freehand: ^1.2.0
   react: ^18.2.0
   react-bootstrap-icons: ^1.9.1
   react-dom: ^18.2.0
   react-redux: ^8.0.4
   redux: ^4.2.0
+  redux-undo: ^1.0.1
   roughjs: ^4.5.2
   typescript: ^4.6.4
   vite: ^3.2.0
@@ -21,12 +23,14 @@ specifiers:
 dependencies:
   '@reduxjs/toolkit': 1.8.6_kuo2ie247izvzll3jejufdtq3q
   antd: 4.24.0_biqbaboplfbrettd7655fr4n2y
+  cuid: 2.1.8
   perfect-freehand: 1.2.0
   react: 18.2.0
   react-bootstrap-icons: 1.9.1_react@18.2.0
   react-dom: 18.2.0_react@18.2.0
   react-redux: 8.0.4_h6epe7l2gr2z2rhkgdu6cxyvqq
   redux: 4.2.0
+  redux-undo: 1.0.1
   roughjs: 4.5.2
 
 devDependencies:
@@ -644,6 +648,10 @@ packages:
 
   /csstype/3.1.1:
     resolution: {integrity: sha512-DJR/VvkAvSZW9bTouZue2sSxDwdTN92uHjqeKVm+0dAqdfNykRzQ95tay8aXMBAAPpUiq4Qcug2L7neoRh2Egw==}
+
+  /cuid/2.1.8:
+    resolution: {integrity: sha512-xiEMER6E7TlTPnDxrM4eRiC6TRgjNX9xzEZ5U/Se2YJKr7Mq4pJn/2XEHjl3STcSh96GmkHPcBXLES8M29wyyg==}
+    dev: false
 
   /date-fns/2.29.3:
     resolution: {integrity: sha512-dDCnyH2WnnKusqvZZ6+jA1O51Ibt8ZMRNkDZdyAyK4YfbDwa/cEmuztzG5pk6hqlp9aSBPYcjOlktquahGwGeA==}
@@ -1647,6 +1655,10 @@ packages:
       redux: ^4
     dependencies:
       redux: 4.2.0
+    dev: false
+
+  /redux-undo/1.0.1:
+    resolution: {integrity: sha512-0yFPT+FUgwxCEiS0Mg5T1S4tkgjR8h6sJRY9CW4EMsbJOf1SxO289TbJmlzhRouCHacdDF+powPjrjLHoJYxWQ==}
     dev: false
 
   /redux/4.2.0:

@@ -54,6 +54,7 @@ type _ElementBase = {
   x: number
   y: number
   // TODO: group, element bonds, 
+  selected?: boolean
   lastUpdate?: number
   removed?: boolean
   strokeColor?: string
@@ -88,7 +89,7 @@ type ConcreteElement<P, T extends typeof Elements[number] = never> = _ElementBas
 
 // All element types here:
 export type FreedrawElement = ConcreteElement<FreedrawProps, 'freedraw'>;
-export type CommonElement = FreedrawElement
+export type CommonElement = FreedrawElement | ConcreteElement<{}, 'text'>
 // export type ImageElement = ConcreteElement
 
 
@@ -123,8 +124,12 @@ export type BoardState = {
   },
   editingElement: CommonElement | null,
 
+  selected: string[],
+  selection: [x1: number, y1: number, x2: number, y2: number] | null,
+
   renderConfig: {
     gridDisplay: boolean,
     debug?: boolean,
   },
+
 }

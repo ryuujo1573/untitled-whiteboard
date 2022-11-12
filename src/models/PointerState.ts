@@ -15,7 +15,8 @@ export type PointerState = {
     element: CommonElement | null,
     // all: CommonElement[],
   },
-  metaKeyDown: boolean,
+  metaKey: boolean,
+  shiftKey: boolean,
   // used only once, defined inside the initial pointerDown event
   listeners: {
     onPointerMove?: ReturnType<typeof throttleByAnimationFrame>,
@@ -25,12 +26,13 @@ export type PointerState = {
   },
 }
 
-export function createPointerState({ clientX, clientY, metaKey }: React.PointerEvent<HTMLCanvasElement>): PointerState {
+export function createPointerState({ clientX, clientY, metaKey, shiftKey }: React.PointerEvent<HTMLCanvasElement>): PointerState {
   const origin: Point = [clientX, clientY]
 
   return {
     origin,
-    metaKeyDown: metaKey,
+    metaKey,
+    shiftKey,
     lastPoint: [...origin] as Point,
     // save copies of original elements into a Map
     hit: { element: null },

@@ -8,7 +8,7 @@ import { CommonElement, DefaultElementStyle, FreedrawElement } from "../models/t
 import { utils } from "../utils";
 
 export let canvas: HTMLCanvasElement | null = null;
-export type TranslatedCanvas = [canvas: HTMLCanvasElement, dx: number, dy: number]
+export type TranslatedCanvas = [canvas: HTMLCanvasElement, dx: number, dy: number, padding: number]
 
 export const elementCanvasCaches = new WeakMap<CommonElement, TranslatedCanvas>();
 export const pathCaches = new WeakMap<FreedrawElement, Path2D>();
@@ -128,5 +128,5 @@ export function generateCanvas(freedraw: FreedrawElement): TranslatedCanvas {
 
   utils.log('🏞️ image: fill path.');
 
-  return [canvas, offsetX, offsetY];
+  return [canvas, offsetX, offsetY, padding];
 }

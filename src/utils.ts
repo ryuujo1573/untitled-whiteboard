@@ -135,6 +135,7 @@ export const colorize = (str: string, format: 'rgb' | 'hex' | 'hsl' | 'r,g,b' = 
         return [(hash & 0xff0000) >> 16, (hash & 0x00ff00) >> 8, hash & 0x0000ff].join(',');
     }
   };
+  return '';
 }
 
 export function toMappedList<T extends { id: string }>(list: T[]) {
