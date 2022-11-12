@@ -9,7 +9,17 @@ const Elements = [
   'text', 'freedraw', 'shape', 'image',
 ] as const
 
-export type AllTools = typeof Elements[number] | 'selector';
+type ElementType = typeof Elements[number];
+
+
+type ElementToolMap = {
+  'text': ['text', 'vtext'],
+  'freedraw': ['freedraw'],
+  'shape': ['rect', 'circle'],
+  'image': ['image'],
+}
+
+export type AllTools = (ElementToolMap[ElementType][number] | 'selector');
 
 type NullableKeys<T> = {
   [P in keyof T]-?: Extract<T[P], null | undefined> extends never ? never : P

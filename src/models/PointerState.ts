@@ -1,5 +1,6 @@
+import { Point } from "roughjs/bin/geometry";
 import { throttleByAnimationFrame } from "../utils";
-import { CommonElement, Point } from "./types";
+import { CommonElement } from "./types";
 
 
 // TODO: support actions of scroll, drag, resize.
@@ -17,10 +18,10 @@ export type PointerState = {
   metaKeyDown: boolean,
   // used only once, defined inside the initial pointerDown event
   listeners: {
-    onPointerMove?:  ReturnType<typeof throttleByAnimationFrame>,
-    onPointerUp?:  ((event: PointerEvent) => void),
-    onKeyDown?:  ((event: KeyboardEvent) => void),
-    onKeyUp?:  ((event: KeyboardEvent) => void),
+    onPointerMove?: ReturnType<typeof throttleByAnimationFrame>,
+    onPointerUp?: ((event: PointerEvent) => void),
+    onKeyDown?: ((event: KeyboardEvent) => void),
+    onKeyUp?: ((event: KeyboardEvent) => void),
   },
 }
 
@@ -32,7 +33,7 @@ export function createPointerState({ clientX, clientY, metaKey }: React.PointerE
     metaKeyDown: metaKey,
     lastPoint: [...origin] as Point,
     // save copies of original elements into a Map
-    hit: {element: null},
+    hit: { element: null },
     listeners: {}
   }
 }
