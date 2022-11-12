@@ -45,3 +45,25 @@ export const CURSOR_TYPE = {
     MOVE: "move",
     AUTO: "",
 };
+
+export type FileExtention = 'gif'
+    | 'jpg'
+    | 'jpg'
+    | 'png'
+    | 'svg'
+
+export const MIME_TYPES = {
+    excalidraw: "application/vnd.excalidraw+json",
+    excalidrawlib: "application/vnd.excalidrawlib+json",
+    json: "application/json",
+    svg: "image/svg+xml",
+    "excalidraw.svg": "image/svg+xml",
+    png: "image/png",
+    "excalidraw.png": "image/png",
+    jpg: "image/jpeg",
+    gif: "image/gif",
+    webp: "image/webp",
+    bmp: "image/bmp",
+    ico: "image/x-icon",
+    binary: "application/octet-stream",
+} as const;

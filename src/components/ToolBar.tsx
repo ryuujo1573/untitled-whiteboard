@@ -1,6 +1,6 @@
 import { TOOLS } from "../consts/constants"
 import { AllTools } from "../models/Elements"
-import { capitalizeString, setCursorForTool, utils } from "../utils"
+import { capitalizeString, fileOpen, setCursorForTool, utils } from "../utils"
 import { clsx } from 'clsx'
 
 interface ToolBarProps {
@@ -31,6 +31,18 @@ const ToolBar: React.FC<ToolBarProps> = ({
       image: '图片'
     }
     return titles[type]
+  }
+
+  const onImageAction = async () => {
+    try {
+      // TODO 获取到真正的坐标
+      const { x, y } = { x: 1, y: 2 }
+      const imageFile = await fileOpen({
+        description:"图像文件"
+      })
+    } catch (error) {
+
+    }
   }
   return (
     <div id="tool-bar">

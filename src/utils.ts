@@ -1,6 +1,7 @@
 import { unstable_batchedUpdates } from "react-redux/es/utils/reactBatchedUpdates";
-import { CURSOR_TYPE } from "./consts/constants";
+import { CURSOR_TYPE, FileExtention, MIME_TYPES } from "./consts/constants";
 import { AllTools } from "./models/Elements";
+import { fileOpen as _fileOpen } from "browser-fs-access";
 
 export const utils = {
   shouldSkipLogging: false,
@@ -99,3 +100,27 @@ export const setCursorForTool = (
  * @returns 首字母大写
  */
 export const capitalizeString = (str: string | null) => str && `${str.charAt(0).toUpperCase()}${str.slice(1)}`
+
+export const fileOpen = <M extends boolean | undefined = false>(opts: {
+  extensions?: FileExtention[],
+  description: string,
+  multiple?: M,
+}): Promise<M extends false | undefined ? File : File[]> => {
+  type ReturnType = M extends false | undefined ? File : File[];
+
+  const mimeTypes = opts.extensions?.reduce((mimeTypes, type) => {
+    mimeTypes.push(MIME_TYPES[type])
+    return mimeTypes
+  }, [] as string[])
+
+  const extensions = opts.extensions?.reduce((acc, ext) => {
+    if (ext === 'jpg') return acc.concat('.jpg', '.jpeg')
+    return acc.concat(`.${ext}`)
+  }, [] as string[])
+  return _fileOpen({
+    description: opts.description,
+    mimeTypes: mimeTypes,
+    extensions: extensions,
+    multiple: opts.multiple ?? false,
+  }) as Promise<ReturnType>
+}
