@@ -1,5 +1,5 @@
 import { throttleByAnimationFrame } from "../utils";
-import { CommonElement, Point } from "./Elements";
+import { CommonElement, Point } from "./types";
 
 
 // TODO: support actions of scroll, drag, resize.

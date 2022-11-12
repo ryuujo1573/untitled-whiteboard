@@ -1,6 +1,7 @@
 import { unstable_batchedUpdates } from "react-redux/es/utils/reactBatchedUpdates";
 import { CURSOR_TYPE } from "./consts/constants";
-import { AllTools } from "./models/Elements";
+import { AllTools } from "./models/types";
+import elements from "./testElements";
 
 export const utils = {
   shouldSkipLogging: false,
@@ -134,4 +135,12 @@ export const colorize = (str: string, format: 'rgb' | 'hex' | 'hsl' | 'r,g,b' = 
         return [(hash & 0xff0000) >> 16, (hash & 0x00ff00) >> 8, hash & 0x0000ff].join(',');
     }
   };
+}
+
+export function toMappedList<T extends { id: string }>(list: T[]) {
+  return {
+    indices: list.map(ele => ele.id),
+    elementById: Object.fromEntries(list.map(e => [e.id, e])),
+    // elementById: new Map(list.map(e => [e.id, e])),
+  }
 }

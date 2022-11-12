@@ -1,42 +1,37 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Provider } from 'react-redux';
-import { getStroke } from 'perfect-freehand';
 import { Events } from '../consts/Events';
-import { AllTools, CommonElement, DefaultElementStyle, FreedrawElement, Point } from '../models/Elements';
-import { randomId } from '../random';
 import { createPointerState, PointerState } from '../models/PointerState';
-import testElements from '../testElements';
 import { colorize, utils, withBatchedUpdates, withBatchedUpdatesThrottled } from '../utils';
-
-type TranslatedCanvas = [canvas: HTMLCanvasElement, dx: number, dy: number]
-const elementCanvasCaches = new WeakMap<CommonElement, TranslatedCanvas>();
-const pathCaches = new WeakMap<FreedrawElement, Path2D>();
-let lastPointerUp: ((event: any) => void) | null = null;
-
-// debug purpose
-Object.assign(window, {
-  elementCanvasCaches,
-  pathCaches,
-  lastPointerUp,
-});
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { startFreedraw, updateFreedraw, stopFreedraw } from '../redux/features/canvasSlice';
+import store from '../redux/store';
+import { BoardState, CommonElement, DefaultElementStyle, FreedrawElement } from '../models/types';
+import { elementCanvasCaches, generateCanvas, getAbsoluteCoords } from '../utils/canvas';
 
 function Whiteboard() {
+  // TODO: darkmode auto change and customizable.
+  const boardState = useAppSelector(state => state.canvas);
+  const dispatch = useAppDispatch();
 
-  // darkmode support, run once
   useEffect(() => {
+    const mq = matchMedia('(prefers-color-scheme: dark)');
     const inBrowser = typeof window !== 'undefined';
     const customSetting = inBrowser ? localStorage.getItem('theme') : 'light';
     const isSystemDarkmode =
-      inBrowser && matchMedia('(prefers-color-scheme: dark)').matches;
-
+      inBrowser && mq.matches;
     if (!customSetting && isSystemDarkmode) {
       document.documentElement.classList.add('dark');
     } else if (customSetting) {
       document.documentElement.classList.add(customSetting);
     }
-    return () => {
+    const onModeChange = () => {
+    }
+    onModeChange();
 
+    mq.addEventListener('change', onModeChange);
+    return () => {
+      mq.removeEventListener('change', onModeChange);
     }
   }, [])
 
@@ -45,6 +40,7 @@ function Whiteboard() {
   // canvas ref update
   //  for adding touch events listener to canvas.
   useEffect(() => {
+    const canvas = canvasRef.current;
     const onTapStart = (evt: TouchEvent) => {
       utils.log('onTapStart: ' + Date.now() / 1000);
     }
@@ -52,130 +48,46 @@ function Whiteboard() {
     const onTapEnd = (evt: TouchEvent) => {
       utils.log('onTapEnd: ' + Date.now() / 1000);
     }
-
-    canvasRef.current?.addEventListener(Events.touchStart, onTapStart);
-    canvasRef.current?.addEventListener(Events.touchEnd, onTapEnd);
-
-    addEventListener(Events.resize, onWindowResize);
+    if (canvas) {
+      // dispatch(renderBoard(canvas));
+      canvas.addEventListener(Events.touchStart, onTapStart);
+      canvas.addEventListener(Events.touchEnd, onTapEnd);
+      // ¿ where to unsubscribe ?
+      // store.subscribe(() => renderBoard(boardState, canvas));
+      renderBoard(boardState, canvas);
+    }
 
     return () => {
-      canvasRef.current?.removeEventListener(Events.touchStart, onTapStart);
-      canvasRef.current?.removeEventListener(Events.touchEnd, onTapEnd);
-      removeEventListener(Events.resize, onWindowResize);
+      canvas?.removeEventListener(Events.touchStart, onTapStart);
+      canvas?.removeEventListener(Events.touchEnd, onTapEnd);
     }
-  }, [canvasRef.current]);
-
-  const [boardState, setBoardState] = useState<BoardState>({
-    wipElement: null,
-    elements: testElements ?? [],
-    tool: 'freedraw',
-  });
-
-  const [renderConfig, setRenderConfig] = useState<RenderConfig>({
-    gridDisplay: true,
-    debug: true,
-  });
-
-  useEffect(() => {
-    if (!canvasRef.current) {
-      return;
-    }
-    const canvas = canvasRef.current!;
-
-    renderBoard(canvas, boardState, renderConfig);
-
-  }, [boardState]);
+  }, [canvasRef.current, boardState]);
 
   //#region Canvas related function callbacks
 
-  const onWindowResize = withBatchedUpdates(() => {
-    // boardState.elements.forEach(shapeCaches.delete);
-    setBoardState({ ...boardState });
-  });
+  const createPointerStrokingHandler = () =>
+    withBatchedUpdatesThrottled<PointerEvent>((event) => {
+      const { clientX, clientY, target, pressure } = event;
+      if (!(target instanceof HTMLElement)) return;
 
-  const createPointerStrokingHandler =
-    (pointerState: PointerState) =>
-      withBatchedUpdatesThrottled<PointerEvent>((event) => {
-        if (!utils.shouldSkipLogging) {
-          utils.shouldSkipLogging = true;
-        }
-        const { clientX, clientY } = event;
-        const target = event.target;
-        const { wipElement } = boardState;
+      dispatch(updateFreedraw({ clientX, clientY, pressure }));
+    });
 
-        if (!(target instanceof HTMLElement)) return;
-
-        // TODO: 用不可变对象，引入 redux 管理
-
-        // assuming element is freedraw (just for now)
-        if (!wipElement) return;
-        const freedraw = wipElement as FreedrawElement;
-        const points = freedraw.points;
-        const dx = clientX - freedraw.x;
-        const dy = clientY - freedraw.y;
-
-        const lastPoint = points.length > 0 && points.at(-1);
-        const shouldIgnore = lastPoint && lastPoint[0] === dx && lastPoint[1] === dy;
-        if (shouldIgnore) return;
-
-        const pressures = !!freedraw.pressures ? [...freedraw.pressures, event.pressure] as const : undefined;
-
-        freedraw.pressures = pressures;
-        freedraw.points = [...points, [dx, dy]];
-
-        elementCanvasCaches.set(freedraw, generateCanvas(freedraw));
-        setBoardState({
-          ...boardState,
-        });
-      });
 
   const createPointerStrokedHandler =
-    (state: PointerState) =>
+    (pointerState: PointerState) =>
       withBatchedUpdates<PointerEvent>((event) => {
-        // setWipElement(null)
-        if (utils.shouldSkipLogging) {
-          utils.shouldSkipLogging = false;
-        }
-        lastPointerUp = null;
+        // lastPointerUp = null;
 
-        let it = state.listeners.onPointerMove;
+        let it = pointerState.listeners.onPointerMove;
         it && it.flush();
 
-        removeEventListener(Events.pointerMove, state.listeners.onPointerMove!);
-        removeEventListener(Events.pointerUp, state.listeners.onPointerUp!);
+        removeEventListener(Events.pointerMove, pointerState.listeners.onPointerMove!);
+        removeEventListener(Events.pointerUp, pointerState.listeners.onPointerUp!);
 
-        const { wipElement } = boardState;
-        if (!wipElement) return;
-        // assuming element is freedraw (just for now)
-        const freedraw = wipElement as FreedrawElement;
-
-        const { clientX, clientY } = event;
-        const points = freedraw.points;
-        let dx = clientX - freedraw.x;
-        let dy = clientY - freedraw.y;
-
-        // prevent infinitely small dots. (maybe by single click ?)
-        utils.log(dx, dy, ...points[0]);
-
-        // stroke as dots
-        if (dx === points[0][0] && dy === points[0][1]) {
-          // console.warn('stroke extremely small, changing its size to a visible level.');
-          dx += 0.001;
-          dy += 0.001;
-        }
-
-        freedraw.points = [...points, [dx, dy]];
-        freedraw.pressures = freedraw.pressures
-          ? [...freedraw.pressures, event.pressure] as const
-          : undefined;
-        freedraw.last = [dx, dy];
-
-        setBoardState({
-          ...boardState,
-          wipElement: null
-        });
-        utils.log(boardState);
-      })
+        const { clientX, clientY, pressure } = event;
+        dispatch(stopFreedraw({ clientX, clientY, pressure }));
+      });
 
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
     // selection in-canvas only
@@ -188,49 +100,17 @@ function Whiteboard() {
 
     switch (boardState.tool) {
       case 'freedraw':
-        // handle freedraw element creation.
+        dispatch(startFreedraw(pointerState));
 
-        // TODO: replace defaults with current state.
-        const id = randomId();
-        utils.log(`🆕 created freedraw element ${id} at (${event.clientX}, ${event.clientY})`);
+        const onMove = createPointerStrokingHandler();
+        const onUp = createPointerStrokedHandler(pointerState);
 
-        const element: FreedrawElement = {
-          id,
-          type: 'freedraw',
-          x: event.clientX,
-          y: event.clientY,
-          // strokeColor: DefaultElementStyle.strokeColor,
-          // backgroundColor: DefaultElementStyle.backgroundColor,
-          // fillStyle: DefaultElementStyle.fillStyle,
-          // strokeWidth: DefaultElementStyle.strokeWidth,
-          // strokeStyle: DefaultElementStyle.strokeStyle,
-          // opacity: DefaultElementStyle.opacity,
-          points: [[0, 0]],
-          pressures: undefined,
-          last: null,
-        };
-
-        boardState.wipElement = element;
-        boardState.elements = [...boardState.elements, element]
-        setBoardState({
-          ...boardState,
-        });
-
+        pointerState.listeners.onPointerMove = onMove;
+        pointerState.listeners.onPointerUp = onUp;
+        addEventListener(Events.pointerMove, onMove);
+        addEventListener(Events.pointerUp, onUp);
         break;
     }
-
-    const $onPointerMove = createPointerStrokingHandler(pointerState);
-    const $onPointerUp = createPointerStrokedHandler(pointerState);
-
-
-    lastPointerUp = $onPointerUp;
-    // add temperary listener for stroking once.
-    addEventListener(Events.pointerMove, $onPointerMove);
-    addEventListener(Events.pointerUp, $onPointerUp);
-
-    // save the function refs so as to remove them finally.
-    pointerState.listeners.onPointerMove = $onPointerMove;
-    pointerState.listeners.onPointerUp = $onPointerUp;
   }
 
   const [pos, setPos] = useState(['0', '0']);
@@ -251,131 +131,11 @@ function Whiteboard() {
         ref={canvasRef}
         onPointerMove={onPointerMove}
         onPointerDown={onPointerDown}
-      >
-        {/* TODO: i18n */}
-        Online Whiteboard
-      </canvas>
+      />
     </div>
   )
 }
 
-function getRelativeCoords(ele: FreedrawElement): [number, number, number, number] {
-  return ele.points.reduce(([x1, y1, x2, y2], [x, y]) => [
-    Math.min(x1, x),
-    Math.min(y1, y),
-    Math.max(x2, x),
-    Math.max(y2, y),
-  ], [Infinity, Infinity, -Infinity, -Infinity]);
-}
-
-function getAbsoluteCoords(ele: FreedrawElement): [...Point, ...Point] {
-  const [xmin, ymin, xmax, ymax] = getRelativeCoords(ele);
-  return [
-    xmin + ele.x,
-    ymin + ele.y,
-    xmax + ele.x,
-    ymax + ele.y,
-  ];
-}
-
-function generateCanvas(freedraw: FreedrawElement): TranslatedCanvas {
-  let canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d')!;
-
-  //#region Get points ranges.
-
-  // TODO: no need for those elements with w|h.
-  // in that case, x1 = x x2 = x + width and y vice versa.
-  const [x1, y1, x2, y2] = getAbsoluteCoords(freedraw);
-  //#endregion
-
-  //#region Initialize canvas.
-  const { x, y } = freedraw;
-  const d = (a: number, b: number) => Math.abs(a - b);
-
-  // in preceding case, `d(x1, x2)` should be `width`.
-  const padding = (freedraw.strokeWidth ?? DefaultElementStyle.strokeWidth) * 12;
-  freedraw.width = canvas.width = d(x1, x2) * 1.0 + padding * 2;
-  freedraw.height = canvas.height = d(y1, y2) * 1.0 + padding * 2;
-
-  utils.log(`🏞️ image: ${freedraw.id}, pmin(${[x1, y1]}) pmax(${[x2, y2]}), ${[canvas.width, canvas.height]}`);
-
-  // offset from the most upperleft point to element [x,y]
-  const offsetX = x > x1 ? d(x, x1) * 1.0 + padding : 0;
-  const offsetY = y > y1 ? d(y, y1) * 1.0 + padding : 0;
-
-  ctx.translate(
-    offsetX,
-    offsetY);
-  utils.log(`🏞️ image: ${freedraw.id}, translate (${offsetX}, ${offsetY}).`);
-
-  ctx.save(); // why?
-  // ctx.scale(devicePixelRatio * 1.0, devicePixelRatio * 1.0)
-
-  ctx.globalAlpha = freedraw.opacity ?? DefaultElementStyle.opacity;
-
-  ctx.save();
-  ctx.fillStyle = freedraw.strokeColor ?? 'black';
-  //#endregion
-
-
-  //#region Generate freedraw path from points.
-  const pointsEx = freedraw.pressures !== undefined
-    ? freedraw.points.map(([x, y], i) => [x, y, freedraw.pressures![i]])
-    : freedraw.points as readonly number[][] as number[][];
-
-  // get stroke by 'perfect-freehand'
-  const points = getStroke(pointsEx, {
-    simulatePressure: freedraw.pressures === undefined,
-    size: (freedraw.strokeWidth ?? DefaultElementStyle.strokeWidth) * 4.25,
-    thinning: 0.6,
-    smoothing: 0.5,
-    streamline: 0.5,
-    easing: (t) => Math.sin((t * Math.PI) / 2), // https://easings.net/#easeOutSine
-    last: !!freedraw.last, // LastCommittedPoint is added on pointerup
-  });
-
-  const TO_FIXED_PRECISION = /(\s?[A-Z]?,?-?[0-9]*\.[0-9]{0,2})(([0-9]|e|-)*)/g;
-  const med = (A: number[], B: number[]): number[] =>
-    [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2];
-
-  // generate SVG path data string.
-  const path = new Path2D(points
-    .reduce(
-      (acc, point, i, arr) => {
-        if (i === points.length - 1) {
-          acc.push(point, med(point, arr[0]), "L", arr[0], "Z");
-        } else {
-          acc.push(point, med(point, arr[i + 1]));
-        }
-        return acc;
-      },
-      ["M", points[0], "Q"],
-    )
-    .join(" ")
-    .replace(TO_FIXED_PRECISION, "$1"));
-
-  pathCaches.set(freedraw, path);
-
-  ctx.restore();
-  //#endregion
-
-
-  //#region Draw element on canvas.
-
-  // TODO: implement scale for element
-  ctx.save();
-
-  ctx.fillStyle = 'rgb(0,0,0,.8)';
-  ctx.fill(path);
-  ctx.restore();
-
-  //#endregion
-
-  utils.log('🏞️ image: fill path.', canvas);
-
-  return [canvas, offsetX, offsetY];
-}
 
 function renderElement(element: CommonElement, context: CanvasRenderingContext2D, debug?: boolean) {
   switch (element.type) {
@@ -384,9 +144,10 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
       const oldCache = elementCanvasCaches.get(freedraw);
 
       if (!oldCache) {
-        const newCache = (generateCanvas)(freedraw);
+        const newCache = generateCanvas(freedraw);
         elementCanvasCaches.set(freedraw, newCache);
       }
+
       const [elementCanvas, offsetX, offsetY] = oldCache ?? elementCanvasCaches.get(freedraw)!;
 
       // prevent shuffle in subpixel level
@@ -444,18 +205,13 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
   }
 }
 
-type RenderConfig = {
-  gridDisplay: boolean,
-  debug?: boolean,
-}
 
-type BoardState = {
-  wipElement: CommonElement | null,
-  elements: CommonElement[],
-  tool: AllTools,
-}
+function renderBoard(state: BoardState, canvas: HTMLCanvasElement) {
+  const { renderConfig, allElements } = state;
+  console.log('bingo');
 
-function renderBoard(canvas: HTMLCanvasElement, { elements }: BoardState, renderConfig: RenderConfig) {
+  if (!canvas) return;
+
   const context = canvas.getContext('2d')!;
   context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -468,12 +224,12 @@ function renderBoard(canvas: HTMLCanvasElement, { elements }: BoardState, render
       ? "invert(93%) hue-rotate(180deg)"
       : "hue-rotate(0deg)";
 
+  // TODO: elevate `gridSize`.
   const gridSize = 20; // in css pixels
 
   const { gridDisplay, debug } = renderConfig;
 
   // draw grid lines
-  // TODO: elevate `gridSize`.
 
   if (gridDisplay) {
     const width = canvas.width;
@@ -495,17 +251,18 @@ function renderBoard(canvas: HTMLCanvasElement, { elements }: BoardState, render
     context.restore();
   }
 
-  elements.forEach(element => {
-    // render element
+  // render elements
+  console.log(allElements);
+  allElements.indices.forEach(i => {
+    const element = allElements.elementById[i];
     try {
-      utils.log(`🪝 hook: rendering ${element.id}`);
+      utils.log(`🪝 hook: rendering %c'${element.id}'`, 'color: blue;');
 
       renderElement(element, context, debug);
     } catch (error: any) {
       console.error(error);
     }
   })
-
 }
 
 export default Whiteboard;

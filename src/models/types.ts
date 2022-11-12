@@ -1,12 +1,12 @@
+import { Point } from "roughjs/bin/geometry";
 
-export type Point = [number, number]
 export type FillStyle = 'solid' | 'wip'
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted'
 export type StrokeEndian = 'round' | 'sharp'
 
 const Elements = [
   // TODO: implement all these elements
-  'text', 'freedraw', 'shape', 'image'
+  'text', 'freedraw', 'shape', 'image',
 ] as const
 
 export type AllTools = typeof Elements[number] | 'selector';
@@ -14,9 +14,11 @@ export type AllTools = typeof Elements[number] | 'selector';
 type NullableKeys<T> = {
   [P in keyof T]-?: Extract<T[P], null | undefined> extends never ? never : P
 }[keyof T]
+
 type ExtractNullable<T> = {
   [P in NullableKeys<T>]: NonNullable<T[P]>
 }
+
 type ElementStyle = {
   strokeColor?: string
   backgroundColor?: string
@@ -26,6 +28,7 @@ type ElementStyle = {
   strokeEndian?: StrokeEndian
   opacity?: number
 }
+
 export const DefaultElementStyle: ExtractNullable<ElementStyle> = {
   strokeColor: "black",
   backgroundColor: "black",
@@ -34,10 +37,9 @@ export const DefaultElementStyle: ExtractNullable<ElementStyle> = {
   strokeStyle: "solid",
   strokeEndian: "round",
   opacity: 1,
-
 }
 
-interface _ElementBase {
+type _ElementBase = {
   readonly id: string
   x: number
   y: number
@@ -64,9 +66,9 @@ interface _ElementBase {
   data?: Record<string, any>
 }
 
-interface IFreedrawElement {
-  points: readonly Point[]
-  pressures?: readonly number[]
+type FreedrawProps = {
+  points: Point[]
+  pressures?: number[]
   last: Point | null
 }
 
@@ -75,17 +77,44 @@ type ConcreteElement<P, T extends typeof Elements[number] = never> = _ElementBas
 } & P;
 
 // All element types here:
-export type CommonElement = ConcreteElement<{[key: string]: any}>
-export type FreedrawElement = ConcreteElement<IFreedrawElement, 'freedraw'>;
+export type FreedrawElement = ConcreteElement<FreedrawProps, 'freedraw'>;
+export type CommonElement = FreedrawElement
+// export type ImageElement = ConcreteElement
 
 
+export enum Themes {
+  light = 'light',
+  dark = 'dark',
+  çao = '?',
+  auto = 'auto',
+}
 
-// export type _FreedrawElement = ElementBase<'freedraw'> & Readonly<{
-//   points: readonly Point[],
-//   pressures: readonly number[],
-//   // simulatePressure: boolean,
-// }>
+export type Locales = 'zh_cn' | 'en'
 
-type _ElementBaseProps = Point & {
-  id?: string
+
+type Id = string;
+
+export type BoardState = {
+  id: string,
+  title: string,
+  size: {
+    width: number,
+    height: number,
+  },
+
+  tool: AllTools,
+  toolStyle: {},
+
+  allElements: {
+    indices: Id[],
+    elementById: {
+      [id: Id]: CommonElement,
+    }
+  },
+  editingElement: CommonElement | null,
+
+  renderConfig: {
+    gridDisplay: boolean,
+    debug?: boolean,
+  },
 }
