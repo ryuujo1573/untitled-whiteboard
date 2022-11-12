@@ -20,6 +20,7 @@ type ElementToolMap = {
 }
 
 export type AllTools = (ElementToolMap[ElementType][number] | 'selector');
+export type ToolsInBar = Exclude<AllTools, 'vtext'>
 
 type NullableKeys<T> = {
   [P in keyof T]-?: Extract<T[P], null | undefined> extends never ? never : P
