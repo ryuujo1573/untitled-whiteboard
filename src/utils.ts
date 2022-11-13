@@ -98,7 +98,7 @@ export const setCursorForTool = (
  * @param str 要首字母大写的字符串
  * @returns 首字母大写
  */
-export const capitalizeString = (str: string | null) => str && `${str.charAt(0).toUpperCase}${str.slice(1)}`
+export const capitalizeString = (str: string | null) => str && `${str.charAt(0).toUpperCase()}${str.slice(1)}`
 
 export const colorize = (str: string, format: 'rgb' | 'hex' | 'hsl' | 'r,g,b' = 'r,g,b') => {
   if (str) {

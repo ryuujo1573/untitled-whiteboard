@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { AllTools } from "../models/Elements";
+import { AllTools } from "../models/types";
 import Menu from "./Menu";
 import ToolBar from "./ToolBar";
 
+import './OperationUI.scss'
+
 interface OperationUIProps {
-    tool: AllTools,
-    setTool: (type: AllTools) => void,
     canvas: HTMLCanvasElement | null,
 }
 
@@ -15,8 +15,6 @@ interface OperationUIProps {
  * @returns 操作 UI 组件
  */
 const OperationUI: React.FC<OperationUIProps> = ({
-    tool,
-    setTool,
     canvas
 }) => {
     return (
@@ -26,8 +24,6 @@ const OperationUI: React.FC<OperationUIProps> = ({
             {/* TODO ToolBar 暂时没有具体实现 */}
             <ToolBar
                 id="toolbar"
-                tool={tool}
-                setTool={setTool}
                 canvas={canvas}
             />
         </div>
