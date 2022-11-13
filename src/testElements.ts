@@ -1350,6 +1350,15 @@ const elements: CommonElement[] = [
       17.99609375,
       7.44921875
     ],
+  },
+  {
+    id: 'so-Nvidia',
+    type: 'image',
+    x: 300,
+    y: 300,
+    height: 200,
+    width: 200,
+    fileId: 'fuck-you'
   }
 ]
 

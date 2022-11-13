@@ -1,6 +1,7 @@
 import { AllTools, ToolsInBar } from "../models/types"
 import { Cursor, ArrowRight, Square, Fonts, Images, Pen, Circle } from 'react-bootstrap-icons'
 import { createElement, ReactElement, ReactNode } from "react";
+import { type } from "os";
 
 interface ToolType {
     type: ToolsInBar,
@@ -62,7 +63,7 @@ export type FileExtension = 'gif'
     | 'png'
     | 'svg'
 
-export const MIME_TYPES = {
+export const MimeTypes = {
     json: "application/json",
     svg: "image/svg+xml",
     "excalidraw.svg": "image/svg+xml",
@@ -75,3 +76,15 @@ export const MIME_TYPES = {
     ico: "image/x-icon",
     binary: "application/octet-stream",
 } as const;
+
+export const ImageMimeTypes = [
+    MimeTypes.png,
+    MimeTypes.jpg,
+    MimeTypes.svg,
+    MimeTypes.gif,
+    MimeTypes.webp,
+    MimeTypes.bmp,
+    MimeTypes.ico,
+] as const
+
+export const SVG_NS = "http://www.w3.org/2000/svg";

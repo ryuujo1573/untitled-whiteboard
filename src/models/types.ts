@@ -1,4 +1,7 @@
+import { nanoid } from "@reduxjs/toolkit";
+import { type } from "os";
 import { Point } from "roughjs/bin/geometry";
+import { ImageMimeTypes, MimeTypes } from "../consts/constants";
 
 export type FillStyle = 'solid' | 'wip'
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted'
@@ -84,13 +87,18 @@ type FreedrawProps = {
   last: Point | null
 }
 
+type ImageProps = {
+  fileId: FileId | null,
+}
+
 type ConcreteElement<P, T extends typeof Elements[number] = never> = _ElementBase & {
   readonly type: P extends any ? typeof Elements[number] : T
 } & P;
 
 // All element types here:
+export type CommonElement = FreedrawElement | ImageElement
 export type FreedrawElement = ConcreteElement<FreedrawProps, 'freedraw'>;
-export type CommonElement = FreedrawElement | ConcreteElement<{}, 'text'>
+export type ImageElement = ConcreteElement<ImageProps, 'image'>
 // export type ImageElement = ConcreteElement
 
 
@@ -133,4 +141,23 @@ export type BoardState = {
     debug?: boolean,
   },
 
+}
+
+export type DataURL = string 
+
+export type FileId = ReturnType<typeof nanoid>
+
+export type BinaryFileData = {
+  mimeType: typeof ImageMimeTypes[number]
+  id: FileId,
+  dataURL: DataURL,
+  // 创建时的日期
+  createdDate: number,
+}
+
+export type BinaryFiles = Record<FileId, BinaryFileData>
+
+export interface ImageCache {
+  image: HTMLImageElement,
+  mimeType: typeof ImageMimeTypes[number],
 }

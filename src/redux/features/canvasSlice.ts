@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { PointerState } from "../../models/PointerState";
-import { AllTools, BoardState, CommonElement, DefaultElementStyle, FreedrawElement } from "../../models/types";
+import { AllTools, BoardState, CommonElement, DefaultElementStyle, FreedrawElement, ImageElement } from "../../models/types";
 import { randomId } from "../../random";
 import elements from "../../testElements";
 import { toMappedList, utils } from "../../utils";
@@ -168,6 +168,11 @@ const canvasSlice = createSlice({
 
       editingElement = null;
     },
+    ImageAdded(state, action: PayloadAction<ImageElement>) {
+      const imageElement = action.payload
+      state.allElements.indices.push(imageElement.id)
+      state.allElements.elementById[imageElement.id] = imageElement
+    }
     //#endregion
   },
   extraReducers: (builder) => { }
@@ -185,6 +190,7 @@ export const {
   startFreedraw,
   updateFreedraw,
   stopFreedraw,
+  ImageAdded,
 } = canvasSlice.actions;
 
 export default canvasReducer;
