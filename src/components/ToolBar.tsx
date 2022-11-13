@@ -1,9 +1,9 @@
-import { TOOLS } from "../consts/constants"
+import { MimeTypes, TOOLS } from "../consts/constants"
 import { AllTools, ToolsInBar } from "../models/types"
 import { useAppDispatch, useAppSelector } from "../redux/hooks"
-import { capitalizeString, setCursorForTool } from "../utils"
+import { capitalizeString, createImageElement, fileOpen, initializeImageElement, normalizeSVG, setCursorForTool, utils } from "../utils"
 import { clsx } from "clsx";
-import { switchTool } from "../redux/features/canvasSlice";
+import { ImageAdded, switchTool } from "../redux/features/canvasSlice";
 
 interface ToolBarProps {
   id: string,
@@ -36,6 +36,39 @@ const ToolBar: React.FC<ToolBarProps> = ({
 
   const onImageAction = async () => {
     // TODO 等待具体实现
+    try {
+      // TODO 获取到真正的坐标
+      const { x, y } = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+
+      // 打开文件上传框并读取上传的文件
+      const imageFile = await fileOpen({
+        description: "图像文件",
+        extensions: ['jpg', 'png', 'svg', 'gif']
+      })
+      utils.log('🧩 here is the image')
+      utils.log(imageFile)
+
+      // 创建 imageElement
+      const imageElement = createImageElement({
+        x,
+        y,
+      })
+      utils.log('🎊 create imageElement', imageElement)
+
+      try {
+        await initializeImageElement({
+          imageFile,
+          imageElement,
+          canvas,
+        })
+        dispatch(ImageAdded(imageElement))
+      } catch (error: any) {
+        console.error(error);
+      }
+    } catch (error: any) {
+      if (error.name !== 'AbortError') console.error(error)
+      else console.warn(error)
+    }
   }
 
   return (
@@ -60,8 +93,8 @@ const ToolBar: React.FC<ToolBarProps> = ({
                 if (type === 'image') onImageAction();
               }}
               checked={type === tool}
-              // TODO 写好选择图片后取消
-              disabled={type === 'image'}
+            // TODO 写好选择图片后取消
+            // disabled={type === 'image'}
             />
             <div className="tool-icon">
               {icon}

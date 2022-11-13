@@ -21,7 +21,6 @@ const OperationUI: React.FC<OperationUIProps> = ({
         <div id="operation-ui">
             {/* TODO Menu 暂时没有实现 */}
             <Menu />
-            {/* TODO ToolBar 暂时没有具体实现 */}
             <ToolBar
                 id="toolbar"
                 canvas={canvas}

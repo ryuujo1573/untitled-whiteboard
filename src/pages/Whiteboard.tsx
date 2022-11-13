@@ -4,8 +4,8 @@ import { createPointerState, PointerState } from '../models/PointerState';
 import { colorize, utils, withBatchedUpdates, withBatchedUpdatesThrottled } from '../utils';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { startFreedraw, updateFreedraw, stopFreedraw, startSelection, updateSelection, stopSelection } from '../redux/features/canvasSlice';
-import { BoardState, CommonElement, DefaultElementStyle, FreedrawElement } from '../models/types';
-import { elementCanvasCaches, generateCanvas, getAbsoluteCoords, getRelativeCoords } from '../utils/canvas';
+import { BoardState, CommonElement, DefaultElementStyle, FreedrawElement, ImageElement } from '../models/types';
+import { elementCanvasCaches, generateCanvas, generateImageCanvas, getAbsoluteCoords, getRelativeCoords, imageCaches } from '../utils/canvas';
 import { ActionCreators } from 'redux-undo';
 import OperationUI from '../components/OperationUI';
 
@@ -231,6 +231,17 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
       utils.log('🪄 canvas: renderElement', elementCanvas);
 
       break;
+    case 'image': {
+      const imageElement = element as ImageElement
+      const oldImageCache = elementCanvasCaches.get(imageElement)
+      if (!oldImageCache) {
+        const newCache = generateImageCanvas(imageElement)
+        elementCanvasCaches.set(imageElement, newCache)
+      }
+
+      const [elementCanvas, x, y] = oldImageCache ?? elementCanvasCaches.get(imageElement)!
+      context.drawImage(elementCanvas, x, y)
+    }
     default:
       break;
   }

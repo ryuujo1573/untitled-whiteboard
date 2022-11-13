@@ -1,7 +1,13 @@
 import { unstable_batchedUpdates } from "react-redux/es/utils/reactBatchedUpdates";
-import { CURSOR_TYPE } from "./consts/constants";
-import { AllTools } from "./models/types";
+import { CURSOR_TYPE, FileExtension, ImageMimeTypes, MimeTypes, SVG_NS } from "./consts/constants";
+import { AllTools, DataURL, FileId, ImageElement } from "./models/types";
 import elements from "./testElements";
+import { fileOpen as _fileOpen } from "browser-fs-access";
+import { randomId } from "./random";
+import { nanoid } from "@reduxjs/toolkit";
+import { files, imageCaches } from "./utils/canvas";
+import { blob, json } from "stream/consumers";
+import { type } from "os";
 
 export const utils = {
   shouldSkipLogging: false,
@@ -144,4 +150,196 @@ export function toMappedList<T extends { id: string }>(list: T[]) {
     elementById: Object.fromEntries(list.map(e => [e.id, e])),
     // elementById: new Map(list.map(e => [e.id, e])),
   }
+}
+
+/**
+ * 将对象转换为实时对象（console.log 使用）
+ * @param obj 对象
+ * @returns 实时对象
+ */
+export const getRealtimeObj = (obj: object) =>
+  JSON.parse(JSON.stringify(obj))
+
+/**
+ * 将二进制文件转换成 DataURL
+ * @param file 要转成 DataURL 的文件
+ * @returns 值为 DataURL 的 Promise
+ */
+export const getDataURL = async (file: Blob | File): Promise<DataURL> => {
+  return new Promise<DataURL>((resolve, reject) => {
+    const fileReader = new FileReader()
+    fileReader.readAsDataURL(file)
+    fileReader.onload = () => {
+      resolve(fileReader.result as DataURL)
+    }
+  })
+}
+
+/**
+ * 根据传入的参数调用浏览器上传文件 api 并返回读取的文件
+ * @param opts {文件拓展？，类型描述，多文件上传？}
+ * @returns 值为 File 类型的 Promise
+ */
+export const fileOpen = <M extends boolean | undefined = false>(opts: {
+  extensions?: FileExtension[],
+  description: string,
+  multiple?: M,
+}): Promise<M extends false | undefined ? File : File[]> => {
+  type ReturnType = M extends false | undefined ? File : File[];
+
+  // 要读取文件的 MIME 类型
+  const mimeTypes = opts.extensions?.reduce((mimeTypes, type) => {
+    mimeTypes.push(MimeTypes[type])
+    return mimeTypes
+  }, [] as string[])
+
+  // 拓展类型数组
+  const extensions = opts.extensions?.reduce((acc, ext) => {
+    if (ext === 'jpg') return acc.concat('.jpg', '.jpeg')
+    return acc.concat(`.${ext}`)
+  }, [] as string[])
+
+  // 调用 browser-fs-access 打开文件选框并上传文件
+  return _fileOpen({
+    description: opts.description,
+    mimeTypes: mimeTypes,
+    extensions: extensions,
+    multiple: opts.multiple ?? false,
+  }) as Promise<ReturnType>
+}
+
+export const createImageElement = ({
+  fileId,
+  x,
+  y
+}: {
+  fileId?: FileId,
+  x: number,
+  y: number,
+}): ImageElement => {
+  return {
+    id: randomId(),
+    type: 'image',
+    x,
+    y,
+    fileId: fileId ?? null,
+  }
+}
+
+/**
+ * 将 svg 二进制文件规范化后返回字符串
+ * @param SVGBlob svg 二进制文件
+ * @returns 规范化的 svg 字符串
+ */
+export const normalizeSVG = async (SVGBlob: File) => {
+  const svgDoc = new DOMParser().parseFromString(await SVGBlob.text(), MimeTypes.svg)
+  const svg = svgDoc.querySelector('svg')
+  const errorNode = svgDoc.querySelector('parsererror')
+
+  // 如果 errorNode 存在或者 svg 元素的结点名称不为 svg 则报错
+  if (errorNode || svg?.nodeName !== 'svg') {
+    throw new Error('无效的 SVGString')
+  } else {
+    // 如果没有 xmlns 属性则加上该属性
+    if (!svg.hasAttribute('xmlns')) svg.setAttribute('xmlns', SVG_NS)
+
+    // 如果没有宽高则从 viewBox 中匹配宽高并赋值给宽高属性
+    if (!svg.hasAttribute('width') || !svg.hasAttribute('height')) {
+      // 获取到 svg 的 viewBox 属性
+      const viewBox = svg.getAttribute('viewBox')
+      let width = svg.getAttribute('width') || '50'
+      let height = svg.getAttribute('height') || '50'
+      if (viewBox) {
+        // 从 viewBox 中匹配 width height
+        const match = viewBox.match(/\d+ +\d+ +(\d+) +(\d+)/)
+        if (match) [, width, height] = match
+      }
+      // 设定宽高属性
+      svg.setAttribute('width', width)
+      svg.setAttribute('height', height)
+    }
+    utils.log('🍻 规范化 svg: ', svg.outerHTML)
+    return svg.outerHTML
+  }
+}
+
+/**
+ * 通过 dataUrl 计算图片的宽高
+ * @param dataUrl 图片的 dataUrl
+ * @returns 值为 [width, height] 的　Promise
+ */
+const getWidthAndHeightFromDataURL = (dataUrl: DataURL): Promise<[width: number, height: number]> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const img = new Image()
+      img.src = dataUrl
+      img.onload = () => {
+        resolve([img.width, img.height])
+      }
+    } catch (error: any) {
+      console.error(error)
+      console.log(dataUrl);
+      reject(new Error('无法从 data Url 中解析出宽高'))
+    }
+  })
+}
+
+export const isSupportedImageFile = (
+  blob: Blob | null | undefined
+): blob is Blob & { type: typeof ImageMimeTypes[number] } => {
+  const { type } = blob || {}
+  return (
+    !!type && (ImageMimeTypes as readonly string[]).includes(type)
+  )
+}
+
+export const initializeImageElement = async ({
+  imageFile,
+  imageElement,
+  canvas,
+}: {
+  imageFile: File,
+  imageElement: ImageElement,
+  canvas: HTMLCanvasElement | null,
+}) => {
+  if (!isSupportedImageFile(imageFile)) {
+    throw new Error('不支持的文件类型')
+  }
+  // 获取图片文件的 MIME 类型
+  const mimeType = imageFile.type
+  // 将鼠标样式调整为 wait
+  // canvas && (canvas.style.cursor = 'wait')
+
+  // 如果是 svg 则进行相关处理
+  if (mimeType === MimeTypes.svg) {
+    try {
+      imageFile = new File(
+        [new TextEncoder().encode(await normalizeSVG(imageFile))],
+        imageFile.name,
+        { type: MimeTypes.svg }
+      ) as File & { type: typeof MimeTypes.svg }
+      utils.log('⛏️ imageFile.type', imageFile.type)
+    } catch (error: any) {
+      console.warn(error)
+      throw new Error('初始化图片失败')
+    }
+  }
+  // 生成 fileId
+  const fileId: FileId = nanoid()
+
+  const dataURL = files[fileId]?.dataURL || (await getDataURL(imageFile))
+
+  // 将 fileId 赋给 imageElement
+  imageElement.fileId = fileId
+  utils.log('🤔 imageElement before return Promise', JSON.parse(JSON.stringify(imageElement)))
+  // 将生成的文件存到 files 中
+  files[fileId] = {
+    mimeType,
+    id: fileId,
+    dataURL,
+    createdDate: Date.now()
+  };
+  // 获取图片的宽高赋给 width height
+  [imageElement.width, imageElement.height] = await getWidthAndHeightFromDataURL(dataURL)
+  utils.log('🤔 imageElement after get width height', getRealtimeObj(imageElement))
 }
