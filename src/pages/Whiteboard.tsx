@@ -3,14 +3,20 @@ import { Events } from '../consts/Events';
 import { createPointerState, PointerState } from '../models/PointerState';
 import { colorize, utils, withBatchedUpdates, withBatchedUpdatesThrottled } from '../utils';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { startFreedraw, updateFreedraw, stopFreedraw, startSelection, updateSelection, stopSelection } from '../redux/features/canvasSlice';
+import { startSelection, updateSelection, stopSelection, addElement } from '../redux/features/canvasSlice';
 import { BoardState, CommonElement, DefaultElementStyle, FreedrawElement, ImageElement } from '../models/types';
-import { elementCanvasCaches, generateCanvas, generateImageCanvas, getAbsoluteCoords, getRelativeCoords, imageCaches } from '../utils/canvas';
+import { elementCanvasCaches, generateCanvas, generateImageCanvas, getAbsoluteCoords, getRelativeCoords } from '../utils/canvas';
 import { ActionCreators } from 'redux-undo';
 import OperationUI from '../components/OperationUI';
+import { strokeStart, strokeUpdate } from '../redux/features/freedrawSlice';
+import { strokeStop } from '../redux/features/actions';
 
+let lastPointerUp: ((event: any) => void) | null = null;
+let pointerState: PointerState | null = null;
+let i = 0;
 function Whiteboard() {
   const boardState = useAppSelector(state => state.canvas);
+  const freedrawState = useAppSelector(state => state.freedraw);
   const dispatch = useAppDispatch();
 
   // TODO: darkmode auto change and customizable.
@@ -51,54 +57,24 @@ function Whiteboard() {
     if (canvas) {
       // canvas.addEventListener(Events.touchStart, onTapStart);
       // canvas.addEventListener(Events.touchEnd, onTapEnd);
-      renderBoard(boardState.present, canvas);
+      renderBoard(boardState, canvas);
+
+      if (freedrawState.freedraw) {
+        renderElement(freedrawState.freedraw, canvas.getContext('2d')!, false)
+      }
     }
+
 
     return () => {
       // canvas?.removeEventListener(Events.touchStart, onTapStart);
       // canvas?.removeEventListener(Events.touchEnd, onTapEnd);
     }
-  }, [canvasRef.current, boardState]);
+  }, [canvasRef.current, boardState, freedrawState]);
 
   //#region Canvas related function callbacks
 
-  const createPointerStrokingHandler = () =>
-    withBatchedUpdatesThrottled<PointerEvent>((event) => {
-      const { clientX, clientY, target, pressure } = event;
-      if (!(target instanceof HTMLElement)) return;
-
-      dispatch(updateFreedraw({ clientX, clientY, pressure }));
-    });
-
-
-  const createPointerStrokedHandler = (pointerState: PointerState) =>
-    withBatchedUpdates<PointerEvent>((event) => {
-      // lastPointerUp = null;
-
-      let it = pointerState.listeners.onPointerMove;
-      it && it.flush();
-
-      removeEventListener(Events.pointerMove, pointerState.listeners.onPointerMove!);
-      removeEventListener(Events.pointerUp, pointerState.listeners.onPointerUp!);
-
-      const { clientX, clientY, pressure } = event;
-      dispatch(stopFreedraw({ clientX, clientY, pressure }));
-    });
-
-  const createSelectionHandler = () => withBatchedUpdatesThrottled<PointerEvent>(evt => {
-    const { clientX, clientY, pressure } = evt;
-    dispatch(updateSelection({ clientX, clientY, pressure }));
-  });
-
-  const createAfterSelectionHandler = (pointerState: PointerState) => withBatchedUpdates<PointerEvent>(evt => {
-    let it = pointerState.listeners.onPointerMove;
-    it && it.flush();
-    removeEventListener(Events.pointerMove, pointerState.listeners.onPointerMove!);
-    removeEventListener(Events.pointerUp, pointerState.listeners.onPointerUp!);
-
-    const { clientX, clientY, pressure } = evt;
-    dispatch(stopSelection({ clientX, clientY, pressure }));
-  })
+  const createHandler = (f: (evt: PointerEvent) => void) => withBatchedUpdates<PointerEvent>(f);
+  const createThrottledHandler = (f: (evt: PointerEvent) => void) => withBatchedUpdatesThrottled<PointerEvent>(f);
 
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
     // selection in-canvas only
@@ -107,31 +83,78 @@ function Whiteboard() {
       selection.removeAllRanges();
     }
 
-    const pointerState = createPointerState(event);
+    if (lastPointerUp !== null) {
+      // clean up for possible missing `pointerup` after a `pointerdown`.
+      lastPointerUp(event);
+    }
 
-    switch (boardState.present.tool) {
-      case 'freedraw':
-        dispatch(startFreedraw(pointerState));
+    pointerState = createPointerState(event);
 
-        const onMove = createPointerStrokingHandler();
-        const onUp = createPointerStrokedHandler(pointerState);
+    switch (boardState.tool) {
+      case 'selector': {
+        dispatch(startSelection({ clientX: event.clientX, clientY: event.clientY }));
+
+        const onMove = createThrottledHandler(evt => {
+          const { clientX, clientY, pressure } = evt;
+          dispatch(updateSelection({ clientX, clientY, pressure }));
+        });
+        const onUp = createHandler(evt => {
+          lastPointerUp = null;
+          if (!pointerState) return;
+          let it = pointerState.listeners.onPointerMove;
+          it && it.flush();
+          removeEventListener(Events.pointerMove, pointerState.listeners.onPointerMove!);
+          removeEventListener(Events.pointerUp, pointerState.listeners.onPointerUp!);
+
+          const { clientX, clientY, pressure } = evt;
+
+          dispatch(stopSelection({ clientX, clientY, pressure }));
+        });
 
         pointerState.listeners.onPointerMove = onMove;
-        pointerState.listeners.onPointerUp = onUp;
+        pointerState.listeners.onPointerUp = lastPointerUp = onUp;
         addEventListener(Events.pointerMove, onMove);
         addEventListener(Events.pointerUp, onUp);
         break;
+      }
+      case 'freedraw':
+        const { clientX, clientY, pressure } = event;
+        dispatch(strokeStart({ clientX, clientY, pressure }));
 
-      case 'selector': {
-        dispatch(startSelection(pointerState));
+        const onMove = createThrottledHandler((event) => {
+          const { clientX, clientY, target, pressure } = event;
+          if (!(target instanceof HTMLElement)) return;
 
-        const onMove = createSelectionHandler();
-        const onUp = createAfterSelectionHandler(pointerState);
+          // target 为 Canvas, 不应该通过 action dispatch 传递.
+          dispatch(strokeUpdate({ clientX, clientY, pressure }));
+        });
+
+        const onUp = createHandler((event) => {
+          lastPointerUp = null;
+          if (!pointerState) return;
+
+          removeEventListener(Events.pointerMove, pointerState.listeners.onPointerMove!);
+          removeEventListener(Events.pointerUp, pointerState.listeners.onPointerUp!);
+          let it = pointerState.listeners.onPointerMove;
+          // 确保已经发出的 move 事件处理完毕.
+          it && it.flush();
+
+          const { clientX, clientY, pressure } = event;
+
+          dispatch(strokeUpdate({ clientX, clientY, pressure }));
+          console.log(freedrawState.freedraw, '#1');
+
+          dispatch(addElement(freedrawState.freedraw!));
+          dispatch(strokeStop({ element: freedrawState.freedraw!, historyLimit: 0 }));
+        });
 
         pointerState.listeners.onPointerMove = onMove;
-        pointerState.listeners.onPointerUp = onUp;
+        pointerState.listeners.onPointerUp = lastPointerUp = onUp;
         addEventListener(Events.pointerMove, onMove);
         addEventListener(Events.pointerUp, onUp);
+        break;
+      case 'rect': {
+        // dispatch()
         break;
       }
     }
@@ -151,7 +174,7 @@ function Whiteboard() {
         zIndex: -1,
       }}>
         <p>({(pos[0] + ',').padEnd(12) + (pos[1]).padEnd(9)})</p>
-        <p>Selecting: ({(boardState.present.selection?.map(v => v.toFixed(1).padStart(5)).join(',')) ?? 'none'})</p>
+        <p>Selecting: ({(boardState.selectingArea?.map(v => v.toFixed(1).padStart(5)).join(',')) ?? 'none'})</p>
       </div>
       {/* 操作栏 */}
       <OperationUI
@@ -190,13 +213,13 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
 
       // TODO: support scale & rotate
 
-      context.save();
       // context.translate(cx * 1.0, cy * 1.0)
       // const x = ((x2 - x1) / 2) * devicePixelRatio
       // const y = ((y2 - y1) / 2) * devicePixelRatio
       const { x, y } = freedraw;
 
       if (debug) {
+        context.save();
         const fontSize = 16;
         context.font = `${fontSize}px system-ui`;
         context.lineWidth = 1;
@@ -232,15 +255,18 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
 
       break;
     case 'image': {
-      const imageElement = element as ImageElement
-      const oldImageCache = elementCanvasCaches.get(imageElement)
+      const imageElement = element as ImageElement;
+      const oldImageCache = elementCanvasCaches.get(imageElement);
       if (!oldImageCache) {
-        const newCache = generateImageCanvas(imageElement)
-        elementCanvasCaches.set(imageElement, newCache)
+        const newCache = generateImageCanvas(imageElement);
+        elementCanvasCaches.set(imageElement, newCache);
       }
 
       const [elementCanvas, x, y] = oldImageCache ?? elementCanvasCaches.get(imageElement)!
-      context.drawImage(elementCanvas, x, y)
+      context.drawImage(elementCanvas, x, y);
+    }
+    case 'shape': {
+      break;
     }
     default:
       break;
@@ -249,9 +275,7 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
 
 
 function renderBoard(state: BoardState, canvas: HTMLCanvasElement) {
-  const { renderConfig, allElements, selected, selection } = state;
-
-  if (!canvas) return;
+  const { renderConfig, allElements, selectingArea: selection } = state;
 
   const context = canvas.getContext('2d')!;
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -312,20 +336,20 @@ function renderBoard(state: BoardState, canvas: HTMLCanvasElement) {
   // render elements
 
   console.time('elements');
-  allElements.indices.forEach(i => {
-    const element = allElements.elementById[i];
+  allElements.ids.forEach(i => {
+    const element = allElements.entities[i]!;
     try {
       utils.log(`🪝 hook: rendering %c'${element.id}'`, 'color: blue;');
       renderElement(element, context, debug);
       console.timeLog('elements');
-
+      // console.log('# element from all render: ', element.id);
       if (element.selected) {
         const padding = 10;
         const [x1, y1, x2, y2] = getAbsoluteCoords(element as FreedrawElement);
         context.save();
         context.strokeStyle = 'rgb(102, 204, 255)';
         context.strokeRect(x1 - padding, y1 - padding, x2 - x1 + padding * 2, y2 - y1 + padding * 2);
-        context.fillStyle = 'rgba(102, 204, 255, .4)';
+        context.fillStyle = 'rgba(102, 204, 255, .2)';
         context.fillRect(x1 - padding, y1 - padding, x2 - x1 + padding * 2, y2 - y1 + padding * 2);
         context.restore();
       }

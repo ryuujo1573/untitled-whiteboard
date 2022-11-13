@@ -1,5 +1,6 @@
 import { nanoid } from "@reduxjs/toolkit";
 import { type } from "os";
+import { EntityState } from "@reduxjs/toolkit";
 import { Point } from "roughjs/bin/geometry";
 import { ImageMimeTypes, MimeTypes } from "../consts/constants";
 
@@ -125,16 +126,16 @@ export type BoardState = {
   tool: AllTools,
   toolStyle: {},
 
-  allElements: {
-    indices: Id[],
-    elementById: {
-      [id: Id]: CommonElement,
-    }
-  },
+  allElements: EntityState<CommonElement>,
+  // allElements: {
+  //   indices: Id[],
+  //   elementById: {
+  //     [id: Id]: CommonElement,
+  //   }
+  // },
+  selected: boolean,
   editingElement: CommonElement | null,
-
-  selected: string[],
-  selection: [x1: number, y1: number, x2: number, y2: number] | null,
+  selectingArea: [x1: number, y1: number, x2: number, y2: number] | null,
 
   renderConfig: {
     gridDisplay: boolean,
@@ -143,7 +144,7 @@ export type BoardState = {
 
 }
 
-export type DataURL = string 
+export type DataURL = string
 
 export type FileId = ReturnType<typeof nanoid>
 

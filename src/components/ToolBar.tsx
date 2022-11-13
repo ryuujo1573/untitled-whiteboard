@@ -3,7 +3,7 @@ import { AllTools, ToolsInBar } from "../models/types"
 import { useAppDispatch, useAppSelector } from "../redux/hooks"
 import { capitalizeString, createImageElement, fileOpen, initializeImageElement, normalizeSVG, setCursorForTool, utils } from "../utils"
 import { clsx } from "clsx";
-import { ImageAdded, switchTool } from "../redux/features/canvasSlice";
+import { imageAdded, switchTool } from "../redux/features/canvasSlice";
 
 interface ToolBarProps {
   id: string,
@@ -19,7 +19,7 @@ interface ToolBarProps {
 const ToolBar: React.FC<ToolBarProps> = ({
   canvas,
 }) => {
-  const tool = useAppSelector(state => state.canvas.present.tool)
+  const tool = useAppSelector(state => state.canvas.tool)
   const dispatch = useAppDispatch()
 
   const getToolTitleFromType = (type: ToolsInBar): string => {
@@ -61,7 +61,7 @@ const ToolBar: React.FC<ToolBarProps> = ({
           imageElement,
           canvas,
         })
-        dispatch(ImageAdded(imageElement))
+        dispatch(imageAdded(imageElement))
       } catch (error: any) {
         console.error(error);
       }
