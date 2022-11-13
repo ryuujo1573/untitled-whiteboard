@@ -7,6 +7,7 @@ import { startFreedraw, updateFreedraw, stopFreedraw, startSelection, updateSele
 import { BoardState, CommonElement, DefaultElementStyle, FreedrawElement } from '../models/types';
 import { elementCanvasCaches, generateCanvas, getAbsoluteCoords, getRelativeCoords } from '../utils/canvas';
 import { ActionCreators } from 'redux-undo';
+import OperationUI from '../components/OperationUI';
 
 function Whiteboard() {
   const boardState = useAppSelector(state => state.canvas);
@@ -152,6 +153,10 @@ function Whiteboard() {
         <p>({(pos[0] + ',').padEnd(12) + (pos[1]).padEnd(9)})</p>
         <p>Selecting: ({(boardState.present.selection?.map(v => v.toFixed(1).padStart(5)).join(',')) ?? 'none'})</p>
       </div>
+      {/* 操作栏 */}
+      <OperationUI
+        canvas={canvasRef.current}
+      />
       <canvas
         width={window.innerWidth}
         height={window.innerHeight}

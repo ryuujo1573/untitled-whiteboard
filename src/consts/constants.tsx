@@ -1,11 +1,16 @@
-import { AllTools } from "../models/Elements"
-import { Cursor, ArrowRight, Square, Fonts, Images } from 'react-bootstrap-icons'
+import { AllTools, ToolsInBar } from "../models/types"
+import { Cursor, ArrowRight, Square, Fonts, Images, Pen, Circle } from 'react-bootstrap-icons'
 import { createElement, ReactElement, ReactNode } from "react";
 
 interface ToolType {
-    type: AllTools,
+    type: ToolsInBar,
     icon: ReactNode,
-    shortCut: 't' | 'x' | 'r' | 'v' | null,
+    shortCut: 't'
+    | 'x'
+    | 'r'
+    | 'v'
+    | 'o'
+    | null,
 }
 
 export const TOOLS: ToolType[] = [
@@ -15,13 +20,18 @@ export const TOOLS: ToolType[] = [
         shortCut: 'v',
     },
     {
-        type: 'shape',
+        type: 'rect',
         icon: <Square />,
         shortCut: 'r',
     },
     {
+        type: 'circle',
+        icon: <Circle />,
+        shortCut: 'o'
+    },
+    {
         type: 'freedraw',
-        icon: <ArrowRight />,
+        icon: <Pen />,
         shortCut: 'x',
     },
     {
@@ -45,3 +55,23 @@ export const CURSOR_TYPE = {
     MOVE: "move",
     AUTO: "",
 };
+
+export type FileExtension = 'gif'
+    | 'jpg'
+    | 'jpg'
+    | 'png'
+    | 'svg'
+
+export const MIME_TYPES = {
+    json: "application/json",
+    svg: "image/svg+xml",
+    "excalidraw.svg": "image/svg+xml",
+    png: "image/png",
+    "excalidraw.png": "image/png",
+    jpg: "image/jpeg",
+    gif: "image/gif",
+    webp: "image/webp",
+    bmp: "image/bmp",
+    ico: "image/x-icon",
+    binary: "application/octet-stream",
+} as const;

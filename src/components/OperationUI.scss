@@ -25,6 +25,7 @@ div#operation-ui {
 
     .tool {
       height: 2.5rem;
+      user-select: none;
 
       &.checked {
         border-radius: 0.75rem;
