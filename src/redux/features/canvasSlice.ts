@@ -73,6 +73,10 @@ const canvasSlice = createSlice({
             const freedraw = ele as FreedrawElement;
             [x1, y1, x2, y2] = getAbsoluteCoords(freedraw);
             break;
+          case 'image':
+            const imageElement = ele as ImageElement;
+            [x1, y1, x2, y2] = getAbsoluteCoords(imageElement)
+            break;
           default:
             // TODO: implement range checks for other types.
             [x1, y1, x2, y2] = [-Infinity, -Infinity, Infinity, Infinity]

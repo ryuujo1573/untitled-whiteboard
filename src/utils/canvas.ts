@@ -35,14 +35,29 @@ export function getRelativeCoords(ele: FreedrawElement): [number, number, number
   ], [Infinity, Infinity, -Infinity, -Infinity]);
 }
 
-export function getAbsoluteCoords(ele: FreedrawElement): [...Point, ...Point] {
-  const [xmin, ymin, xmax, ymax] = getRelativeCoords(ele);
-  return [
-    xmin + ele.x,
-    ymin + ele.y,
-    xmax + ele.x,
-    ymax + ele.y,
-  ];
+export function getAbsoluteCoords(ele: CommonElement): [...Point, ...Point] {
+  switch (ele.type) {
+    case 'freedraw':
+      const [xmin, ymin, xmax, ymax] = getRelativeCoords(ele as FreedrawElement);
+      return [
+        xmin + ele.x,
+        ymin + ele.y,
+        xmax + ele.x,
+        ymax + ele.y,
+      ];
+    case 'image': {
+      const imageElement = ele as ImageElement
+      return [
+        imageElement.x,
+        imageElement.y,
+        imageElement.x + imageElement.width!,
+        imageElement.y + imageElement.height!,
+      ]
+    }
+    default:
+      return [0, 0, 0, 0]
+  }
+
 }
 
 export function generateCanvas(freedraw: FreedrawElement): TranslatedCanvas {
