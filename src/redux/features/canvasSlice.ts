@@ -3,7 +3,7 @@ import type { PointerState } from "../../models/PointerState";
 import { AllTools, BoardState, CommonElement, DefaultElementStyle, FreedrawElement } from "../../models/types";
 import { randomId } from "../../random";
 import elements from "../../testElements";
-import { toMappedList, utils } from "../../utils";
+import { addOneToMappedList, toMappedList, utils } from "../../utils";
 import { elementCanvasCaches, generateCanvas, getAbsoluteCoords } from "../../utils/canvas";
 
 type PointerEventData = { clientX: number, clientY: number, pressure: number }
@@ -115,8 +115,7 @@ const canvasSlice = createSlice({
       };
 
       state.editingElement = newElement;
-      state.allElements.indices.push(id);
-      state.allElements.elementById[id] = newElement;
+      addOneToMappedList(state.allElements, newElement)
     },
     updateFreedraw(state, action: PayloadAction<PointerEventData>) {
       const { clientX, clientY, pressure } = action.payload;

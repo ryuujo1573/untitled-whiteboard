@@ -145,3 +145,13 @@ export function toMappedList<T extends { id: string }>(list: T[]) {
     // elementById: new Map(list.map(e => [e.id, e])),
   }
 }
+
+/**
+ * 添加一个元素到 Map 化的 list
+ * @param mappedList Map 化的 list
+ * @param item 要添加到 list 的元素
+ */
+ export function addOneToMappedList<T extends ReturnType<typeof toMappedList>, P extends Parameters<typeof toMappedList>[number][number]>(mappedList: T, item: P) {
+  mappedList.indices.push(item.id)
+  mappedList.elementById[item.id] = item
+}
