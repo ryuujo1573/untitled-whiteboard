@@ -5,8 +5,7 @@ import { colorize, utils, withBatchedUpdates, withBatchedUpdatesThrottled } from
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { startFreedraw, updateFreedraw, stopFreedraw, startSelection, updateSelection, stopSelection } from '../redux/features/canvasSlice';
 import { BoardState, AnyElement, FreedrawElement, ImageElement } from '../models/types';
-import { elementCanvasCaches, generateCanvas, generateImageCanvas, getAbsoluteCoords, getRelativeCoords, imageCaches } from '../utils/canvas';
-import { ActionCreators } from 'redux-undo';
+import { elementCanvasCaches, generateCanvas, generateImageCanvas, getAbsoluteCoords } from '../utils/canvas';
 import OperationUI from '../components/OperationUI';
 
 function Whiteboard() {
@@ -138,7 +137,7 @@ function Whiteboard() {
   }
 
   const [pos, setPos] = useState(['0', '0']);
-  const onPointerMove = ({ clientX, clientY, pointerId, pressure, tangentialPressure, tiltX, tiltY, twist, width, height, pointerType, isPrimary }: React.PointerEvent<HTMLCanvasElement>) => {
+  const onPointerMove = ({ clientX, clientY }: React.PointerEvent<HTMLCanvasElement>) => {
     setPos([clientX.toFixed(4), clientY.toFixed(4)]);
   };
   //#endregion
@@ -240,6 +239,7 @@ function renderElement(element: AnyElement, context: CanvasRenderingContext2D, d
 
       const [elementCanvas, x, y] = oldImageCache ?? elementCanvasCaches.get(imageElement)!
       context.drawImage(elementCanvas, x, y)
+      break;
     }
     default:
       break;

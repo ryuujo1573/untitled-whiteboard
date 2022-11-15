@@ -4,14 +4,14 @@
 
 import getStroke from "perfect-freehand";
 import { Point } from "roughjs/bin/geometry";
-import { ImageMimeTypes, MimeTypes } from "../consts/constants";
-import { BinaryFiles, CommonElement, DefaultElementStyle, FileId, FreedrawElement, ImageCache, ImageElement } from "../models/types";
+import { MimeTypes } from "../consts/constants";
+import { BinaryFiles, AnyElement, DefaultElementStyle, FileId, FreedrawElement, ImageCache, ImageElement } from "../models/types";
 import { utils } from "../utils";
 
 export let canvas: HTMLCanvasElement | null = null;
 export type TranslatedCanvas = [canvas: HTMLCanvasElement, dx: number, dy: number, padding: number]
 
-export const elementCanvasCaches = new WeakMap<CommonElement, TranslatedCanvas>();
+export const elementCanvasCaches = new WeakMap<AnyElement, TranslatedCanvas>();
 export const pathCaches = new WeakMap<FreedrawElement, Path2D>();
 // let lastPointerUp: ((event: any) => void) | null = null;
 export const files: BinaryFiles = {}
@@ -35,7 +35,7 @@ export function getRelativeCoords(ele: FreedrawElement): [number, number, number
   ], [Infinity, Infinity, -Infinity, -Infinity]);
 }
 
-export function getAbsoluteCoords(ele: CommonElement): [...Point, ...Point] {
+export function getAbsoluteCoords(ele: AnyElement): [...Point, ...Point] {
   switch (ele.type) {
     case 'freedraw':
       const [xmin, ymin, xmax, ymax] = getRelativeCoords(ele as FreedrawElement);
@@ -77,14 +77,14 @@ export function generateCanvas(freedraw: FreedrawElement): TranslatedCanvas {
 
   // in preceding case, `d(x1, x2)` should be `width`.
   const padding = (freedraw.strokeWidth ?? DefaultElementStyle.strokeWidth) * 12;
-  canvas.width = d(x1, x2) * 1.0 + padding * 2;
-  canvas.height = d(y1, y2) * 1.0 + padding * 2;
+  canvas.width = d(x1, x2) + padding * 2;
+  canvas.height = d(y1, y2) + padding * 2;
 
   utils.log(`🏞️ image: ${freedraw.id}, pmin(${[x1, y1]}) pmax(${[x2, y2]}), ${[canvas.width, canvas.height]}`);
 
   // offset from the most upperleft point to element [x,y]
-  const offsetX = x > x1 ? d(x, x1) * 1.0 + padding : 0;
-  const offsetY = y > y1 ? d(y, y1) * 1.0 + padding : 0;
+  const offsetX = x > x1 ? d(x, x1) + padding : 0;
+  const offsetY = y > y1 ? d(y, y1) + padding : 0;
 
   ctx.translate(
     offsetX,

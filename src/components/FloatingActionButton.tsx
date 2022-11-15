@@ -10,6 +10,6 @@ function FloatingActionButton({onClick}: Props) {
       <img width={32} height={32} src={reactSvg} alt="menu" />
     </div>
   );
-};
+}
 
 export default FloatingActionButton

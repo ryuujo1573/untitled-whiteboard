@@ -1,10 +1,10 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type { PointerState } from "../../models/PointerState";
-import { AllTools, BoardState, CommonElement, DefaultElementStyle, FreedrawElement, ImageElement } from "../../models/types";
-import { randomId } from "../../random";
+import {createSlice, PayloadAction} from "@reduxjs/toolkit";
+import type {PointerState} from "../../models/PointerState";
+import {AllTools, BoardState, FreedrawElement, ImageElement} from "../../models/types";
+import {randomId} from "../../random";
 import elements from "../../testElements";
-import { toMappedList, utils } from "../../utils";
-import { elementCanvasCaches, generateCanvas, getAbsoluteCoords } from "../../utils/canvas";
+import {toMappedList, utils} from "../../utils";
+import {elementCanvasCaches, generateCanvas, getAbsoluteCoords} from "../../utils/canvas";
 
 type PointerEventData = { clientX: number, clientY: number, pressure: number }
 
@@ -137,9 +137,7 @@ const canvasSlice = createSlice({
       const shouldIgnore = lastPoint && lastPoint[0] === dx && lastPoint[1] === dy;
       if (shouldIgnore) return;
 
-      const pressures = !!freedraw.pressures ? [...freedraw.pressures, pressure] : undefined;
-
-      freedraw.pressures = pressures;
+      freedraw.pressures = !!freedraw.pressures ? [...freedraw.pressures, pressure] : undefined;
       freedraw.points.push([dx, dy]);
       state.allElements.elementById[freedraw.id] = freedraw;
 
@@ -159,7 +157,7 @@ const canvasSlice = createSlice({
       let dy = clientY - freedraw.y;
 
       if (dx === points[0][0] && dy === points[0][1]) {
-        // console.warn('stroke extremely small, changing its size to a visible level.');
+        // console.warn('changing tiny stroke size to a visible level.');
         dx += 0.001;
         dy += 0.001;
       }

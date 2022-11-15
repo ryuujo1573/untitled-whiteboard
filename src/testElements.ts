@@ -1,6 +1,6 @@
-import { CommonElement } from "./models/types";
+import { AnyElement } from "./models/types";
 
-const elements: CommonElement[] = [
+const elements: AnyElement[] = [
   {
     id: 'my-love',
     type: 'freedraw',

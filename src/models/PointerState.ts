@@ -1,6 +1,7 @@
 import { Point } from "roughjs/bin/geometry";
 import { throttleByAnimationFrame } from "../utils";
-import { CommonElement } from "./types";
+import { AnyElement } from "./types";
+import React from "react";
 
 
 // TODO: support actions of scroll, drag, resize.
@@ -9,11 +10,11 @@ export type PointerState = {
   readonly origin: Point,
   lastPoint: Point,
   // map of original elements data
-  // originalElements: Map<string, CommonElement>,
+  // originalElements: Map<string, AnyElement>,
   // hit when clicked down.
   hit: {
-    element: CommonElement | null,
-    // all: CommonElement[],
+    element: AnyElement | null,
+    // all: AnyElement[],
   },
   metaKey: boolean,
   shiftKey: boolean,

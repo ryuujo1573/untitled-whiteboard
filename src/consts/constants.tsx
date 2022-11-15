@@ -1,7 +1,6 @@
-import { AllTools, ToolsInBar } from "../models/types"
-import { Cursor, ArrowRight, Square, Fonts, Images, Pen, Circle } from 'react-bootstrap-icons'
-import { createElement, ReactElement, ReactNode } from "react";
-import { type } from "os";
+import { ToolsInBar } from "../models/types"
+import { Cursor, Square, Fonts, Images, Pen, Circle } from 'react-bootstrap-icons'
+import { ReactNode } from "react";
 
 interface ToolType {
     type: ToolsInBar,
@@ -58,7 +57,7 @@ export const CURSOR_TYPE = {
 };
 
 export type FileExtension = 'gif'
-    | 'jpg'
+    | 'jpeg'
     | 'jpg'
     | 'png'
     | 'svg'
@@ -66,9 +65,7 @@ export type FileExtension = 'gif'
 export const MimeTypes = {
     json: "application/json",
     svg: "image/svg+xml",
-    "excalidraw.svg": "image/svg+xml",
     png: "image/png",
-    "excalidraw.png": "image/png",
     jpg: "image/jpeg",
     gif: "image/gif",
     webp: "image/webp",

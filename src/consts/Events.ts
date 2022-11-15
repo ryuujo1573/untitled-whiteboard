@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols,SpellCheckingInspection
+
 export enum Events {
   copy = "copy",
   paste = "paste",

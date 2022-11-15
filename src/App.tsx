@@ -8,4 +8,4 @@ export function App(props: Props) {
     // TODO: implement Login & Register. @xiaojin
     <Whiteboard />
   );
-};
+}

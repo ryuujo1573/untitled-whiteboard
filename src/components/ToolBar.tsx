@@ -1,9 +1,10 @@
-import { MimeTypes, TOOLS } from "../consts/constants"
-import { AllTools, ToolsInBar } from "../models/types"
+import { TOOLS } from "../consts/constants"
+import { ToolsInBar } from "../models/types"
 import { useAppDispatch, useAppSelector } from "../redux/hooks"
-import { capitalizeString, createImageElement, fileOpen, initializeImageElement, normalizeSVG, setCursorForTool, utils } from "../utils"
+import { capitalizeString, createImageElement, fileOpen, initializeImageElement, setCursorForTool, utils } from "../utils"
 import { clsx } from "clsx";
 import { ImageAdded, switchTool } from "../redux/features/canvasSlice";
+import React from "react";
 
 interface ToolBarProps {
   id: string,
@@ -13,7 +14,7 @@ interface ToolBarProps {
 
 /**
  * 工具栏组件
- * @param param0 {tool, setTool, canvas} tool: 当前工具栏工具 setTool: 设定当前工具的状态管理函数 canvas: 当前 canvas 实例
+ * @param param0 {canvas} canvas: 当前 canvas 实例
  * @returns 工具栏
  */
 const ToolBar: React.FC<ToolBarProps> = ({
@@ -34,7 +35,7 @@ const ToolBar: React.FC<ToolBarProps> = ({
     return titles[type]
   }
 
-  const onImageAction = async () => {
+  const onImageAction: () => void = async () => {
     // TODO 等待具体实现
     try {
       // TODO 获取到真正的坐标

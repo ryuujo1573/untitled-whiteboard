@@ -1,13 +1,10 @@
 import { unstable_batchedUpdates } from "react-redux/es/utils/reactBatchedUpdates";
 import { CURSOR_TYPE, FileExtension, ImageMimeTypes, MimeTypes, SVG_NS } from "./consts/constants";
 import { AllTools, DataURL, FileId, ImageElement } from "./models/types";
-import elements from "./testElements";
 import { fileOpen as _fileOpen } from "browser-fs-access";
 import { randomId } from "./random";
 import { nanoid } from "@reduxjs/toolkit";
-import { files, imageCaches } from "./utils/canvas";
-import { blob, json } from "stream/consumers";
-import { type } from "os";
+import { files } from "./utils/canvas";
 
 export const utils = {
   shouldSkipLogging: false,
@@ -140,7 +137,7 @@ export const colorize = (str: string, format: 'rgb' | 'hex' | 'hsl' | 'r,g,b' = 
       case 'r,g,b':
         return [(hash & 0xff0000) >> 16, (hash & 0x00ff00) >> 8, hash & 0x0000ff].join(',');
     }
-  };
+  }
   return '';
 }
 
@@ -177,7 +174,6 @@ export const getDataURL = async (file: Blob | File): Promise<DataURL> => {
 
 /**
  * 根据传入的参数调用浏览器上传文件 api 并返回读取的文件
- * @param opts {文件拓展？，类型描述，多文件上传？}
  * @returns 值为 File 类型的 Promise
  */
 export const fileOpen = <M extends boolean | undefined = false>(opts: {

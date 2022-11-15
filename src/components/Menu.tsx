@@ -1,4 +1,4 @@
-const Menu: React.FC<{}> = () => {
+const Menu: React.FC = () => {
     return (<></>)
 }
 

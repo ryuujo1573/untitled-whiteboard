@@ -1,10 +1,9 @@
-import { configureStore, createListenerMiddleware, Middleware, Store } from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit";
 import canvasReducer, { startFreedraw, stopFreedraw, switchTool, updateFreedraw } from "./features/canvasSlice";
 import generalReducer from "./features/generalSlice";
 import userReducer from "./features/userSlice";
 import undoable, { excludeAction } from 'redux-undo';
 import { batchGroupBy } from "../utils/batchGroupBy";
-import { canvas } from "../utils/canvas";
 
 
 const store = configureStore({

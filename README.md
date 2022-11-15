@@ -1,4 +1,4 @@
-<h1 align="center">untitled-whiteboard</h1>
+# untitled-whiteboard
 
 An untitled whiteboard app runs on Web.
 
@@ -24,7 +24,7 @@ pnpm dev
 
 ## 架构设计文档
 
-[架构设计文档 · ryuujo1573/untitled-whiteboard Wiki (github.com)](https://github.com/ryuujo1573/untitled-whiteboard/wiki/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3)
+[架构设计文档 · ryuujo1573/untitled-whiteboard Wiki](https://github.com/ryuujo1573/untitled-whiteboard/wiki/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3)
 
 ## 演示视频
 
