@@ -4,7 +4,7 @@ import { createPointerState, PointerState } from '../models/PointerState';
 import { colorize, utils, withBatchedUpdates, withBatchedUpdatesThrottled } from '../utils';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { startFreedraw, updateFreedraw, stopFreedraw, startSelection, updateSelection, stopSelection } from '../redux/features/canvasSlice';
-import { BoardState, CommonElement, DefaultElementStyle, FreedrawElement, ImageElement } from '../models/types';
+import { BoardState, AnyElement, FreedrawElement, ImageElement } from '../models/types';
 import { elementCanvasCaches, generateCanvas, generateImageCanvas, getAbsoluteCoords, getRelativeCoords, imageCaches } from '../utils/canvas';
 import { ActionCreators } from 'redux-undo';
 import OperationUI from '../components/OperationUI';
@@ -168,21 +168,20 @@ function Whiteboard() {
   )
 }
 
-function renderElement(element: CommonElement, context: CanvasRenderingContext2D, debug?: boolean) {
+function renderElement(element: AnyElement, context: CanvasRenderingContext2D, debug?: boolean) {
   switch (element.type) {
     case 'freedraw':
-      const freedraw = element as FreedrawElement;
-      const oldCache = elementCanvasCaches.get(freedraw);
+      const oldCache = elementCanvasCaches.get(element);
 
       if (!oldCache) {
-        const newCache = generateCanvas(freedraw);
-        elementCanvasCaches.set(freedraw, newCache);
+        const newCache = generateCanvas(element);
+        elementCanvasCaches.set(element, newCache);
       }
 
-      const [elementCanvas, offsetX, offsetY] = oldCache ?? elementCanvasCaches.get(freedraw)!;
+      const [elementCanvas, offsetX, offsetY] = oldCache ?? elementCanvasCaches.get(element)!;
 
       // prevent shuffle in subpixel level
-      const [x1, y1, x2, y2] = getAbsoluteCoords(freedraw)
+      const [x1, y1, x2, y2] = getAbsoluteCoords(element)
         .map((v, i) => i % 2 == 1 ? Math.ceil(v) : Math.floor(v));
 
       const cx = ((x1 + x2) / 2);
@@ -194,28 +193,28 @@ function renderElement(element: CommonElement, context: CanvasRenderingContext2D
       // context.translate(cx * 1.0, cy * 1.0)
       // const x = ((x2 - x1) / 2) * devicePixelRatio
       // const y = ((y2 - y1) / 2) * devicePixelRatio
-      const { x, y } = freedraw;
+      const { x, y } = element;
 
       if (debug) {
         const fontSize = 16;
         context.font = `${fontSize}px system-ui`;
         context.lineWidth = 1;
-        context.fillText(freedraw.id, x1, y1 + fontSize);
+        context.fillText(element.id, x1, y1 + fontSize);
 
-        context.fillStyle = 'rgba(' + colorize(freedraw.id) + ',.2)';
-        context.fillRect(x1, y1, freedraw.width!, freedraw.height!);
+        context.fillStyle = 'rgba(' + colorize(element.id) + ',.2)';
+        context.fillRect(x1, y1, element.width!, element.height!);
 
         const ctx = elementCanvas.getContext('2d')!;
         // ctx.setTransform(1,0,0,1,0,0)
         ctx.beginPath();
-        ctx.ellipse(...freedraw.points[0], 8, 8, 0, 0, 2 * Math.PI);
+        ctx.ellipse(...element.points[0], 8, 8, 0, 0, 2 * Math.PI);
         ctx.closePath();
         // ctx.fillStyle = ele.strokeColor ?? DefaultElementStyle.strokeColor
         ctx.fillStyle = 'rgba(102, 204, 255, .8)';
         ctx.fill();
 
         ctx.beginPath();
-        let [_x, _y] = freedraw.points.at(-1)!;
+        let [_x, _y] = element.points.at(-1)!;
         ctx.rect(_x - 5, _y - 5, 10, 10);
         ctx.closePath();
         ctx.fillStyle = 'rgba(255, 102, 102, .8)';

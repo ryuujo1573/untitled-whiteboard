@@ -1,7 +1,6 @@
 import { nanoid } from "@reduxjs/toolkit";
-import { type } from "os";
 import { Point } from "roughjs/bin/geometry";
-import { ImageMimeTypes, MimeTypes } from "../consts/constants";
+import { ImageMimeTypes } from "../consts/constants";
 
 export type FillStyle = 'solid' | 'wip'
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted'
@@ -53,7 +52,8 @@ export const DefaultElementStyle: ExtractNullable<ElementStyle> = {
   opacity: 1,
 }
 
-type _ElementBase = {
+interface ElementBase<S extends ElementType> {
+  type: S,
   readonly id: string
   x: number
   y: number
@@ -81,31 +81,23 @@ type _ElementBase = {
   data?: Record<string, any>
 }
 
-type FreedrawProps = {
+
+// All element types here:
+export type AnyElement = FreedrawElement | ImageElement
+
+export interface FreedrawElement extends ElementBase<'freedraw'> {
   points: Point[]
   pressures?: number[]
   last: Point | null
 }
-
-type ImageProps = {
+export interface ImageElement extends ElementBase<'image'> {
   fileId: FileId | null,
 }
-
-type ConcreteElement<P, T extends typeof Elements[number] = never> = _ElementBase & {
-  readonly type: P extends any ? typeof Elements[number] : T
-} & P;
-
-// All element types here:
-export type CommonElement = FreedrawElement | ImageElement
-export type FreedrawElement = ConcreteElement<FreedrawProps, 'freedraw'>;
-export type ImageElement = ConcreteElement<ImageProps, 'image'>
-// export type ImageElement = ConcreteElement
 
 
 export enum Themes {
   light = 'light',
   dark = 'dark',
-  çao = '?',
   auto = 'auto',
 }
 
@@ -128,10 +120,10 @@ export type BoardState = {
   allElements: {
     indices: Id[],
     elementById: {
-      [id: Id]: CommonElement,
+      [id: Id]: AnyElement,
     }
   },
-  editingElement: CommonElement | null,
+  editingElement: AnyElement | null,
 
   selected: string[],
   selection: [x1: number, y1: number, x2: number, y2: number] | null,
